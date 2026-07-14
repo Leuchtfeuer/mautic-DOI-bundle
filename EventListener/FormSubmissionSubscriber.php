@@ -13,6 +13,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Model\DoiConfigManager;
 use MauticPlugin\LeuchtfeuerDoiBundle\Model\FormDoiSubmissionManager;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiActionsDispatcher;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiHashGenerator;
+use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiVerificationHistoryRecorder;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\RuleEvaluator;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\VerificationEmailSender;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -27,6 +28,7 @@ class FormSubmissionSubscriber implements EventSubscriberInterface
         private FormDoiSubmissionManager $submissionManager,
         private DoiActionsDispatcher $actionsDispatcher,
         private DoiHashGenerator $hashGenerator,
+        private DoiVerificationHistoryRecorder $verificationHistoryRecorder,
     ) {
     }
 
@@ -96,6 +98,7 @@ class FormSubmissionSubscriber implements EventSubscriberInterface
             ->skip($skipReason);
 
         $this->submissionManager->save($doiSubmission);
+        $this->verificationHistoryRecorder->recordSkipped($doiSubmission);
 
         // Register callback for custom skip action (executed BEFORE standard actions)
         if ($doiConfig->getSkipPostAction()) {

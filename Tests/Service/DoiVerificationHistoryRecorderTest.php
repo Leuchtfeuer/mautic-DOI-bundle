@@ -75,6 +75,61 @@ class DoiVerificationHistoryRecorderTest extends TestCase
         $this->recorder->recordFailure($submission);
     }
 
+    public function testRecordSkippedPersistsLogWithCorrectAction(): void
+    {
+        $skippedAt  = new \DateTime('2026-03-10 14:00:00');
+        $submission = $this->makeSubmission(id: 11, formName: 'Skip Form', dateCreated: $skippedAt);
+
+        $this->repository->method('getSpecificRows')->willReturn([]);
+
+        $this->repository->expects($this->once())
+            ->method('saveEntity')
+            ->with($this->callback(function (LeadEventLog $log) use ($skippedAt) {
+                self::assertSame('skipped', $log->getAction());
+                self::assertEquals($skippedAt, $log->getDateAdded());
+
+                return true;
+            }));
+
+        $this->repository->expects($this->once())->method('detachEntity');
+
+        $this->recorder->recordSkipped($submission);
+    }
+
+    public function testRecordSkippedUsesExplicitSkippedAtOverDateCreated(): void
+    {
+        $dateCreated = new \DateTime('2026-03-10 14:00:00');
+        $skippedAt   = new \DateTime('2026-03-10 15:00:00');
+        $submission  = $this->makeSubmission(id: 11, formName: 'Skip Form', dateCreated: $dateCreated);
+
+        $this->repository->method('getSpecificRows')->willReturn([]);
+
+        $this->repository->expects($this->once())
+            ->method('saveEntity')
+            ->with($this->callback(function (LeadEventLog $log) use ($skippedAt) {
+                self::assertEquals($skippedAt, $log->getDateAdded());
+
+                return true;
+            }));
+
+        $this->repository->method('detachEntity');
+
+        $this->recorder->recordSkipped($submission, $skippedAt);
+    }
+
+    public function testDeduplicationPreventsSecondSkippedEntry(): void
+    {
+        $submission = $this->makeSubmission(id: 5, formName: 'Form', dateCreated: new \DateTime());
+
+        $this->repository->method('getSpecificRows')
+            ->with(5, DoiVerificationHistoryAction::SKIPPED->value, $this->anything(), DoiVerificationHistoryMetadata::BUNDLE, DoiVerificationHistoryMetadata::OBJECT)
+            ->willReturn([['id' => 99]]);
+
+        $this->repository->expects($this->never())->method('saveEntity');
+
+        $this->recorder->recordSkipped($submission);
+    }
+
     public function testRecordSuccessUsesDateConfirmedAsTimestamp(): void
     {
         $confirmedAt = new \DateTime('2026-01-15 10:30:00');
@@ -215,6 +270,7 @@ class DoiVerificationHistoryRecorderTest extends TestCase
         bool $withLead = true,
         ?\DateTimeInterface $dateConfirmed = null,
         ?Form $form = null,
+        ?\DateTimeInterface $dateCreated = null,
     ): FormDoiSubmission {
         if (null === $form) {
             $form = $this->createMock(Form::class);
@@ -229,6 +285,11 @@ class DoiVerificationHistoryRecorderTest extends TestCase
         $submission->method('getLead')->willReturn($lead);
         $submission->method('getForm')->willReturn($form);
         $submission->method('getDateConfirmed')->willReturn($dateConfirmed);
+        $submission->method('getDateCreated')->willReturn(
+            $dateCreated instanceof \DateTime
+                ? $dateCreated
+                : new \DateTime($dateCreated?->format('Y-m-d H:i:s') ?? 'now')
+        );
 
         return $submission;
     }

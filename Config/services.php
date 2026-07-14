@@ -21,7 +21,7 @@ return function (ContainerConfigurator $configurator): void {
         ->tag(ServiceRepositoryCompilerPass::REPOSITORY_SERVICE_TAG);
 
     $services->load('MauticPlugin\\LeuchtfeuerDoiBundle\\', '../')
-        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, $excludes)).'}');
+        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, $excludes, ['e2e'])).'}');
 
     $services->get(MauticPlugin\LeuchtfeuerDoiBundle\Integration\LeuchtfeuerDoiIntegration::class)
         ->tag('mautic.integration')

@@ -33,6 +33,15 @@ final class DoiVerificationHistoryRecorder
         $this->record($submission, DoiVerificationHistoryAction::FAILURE, $clickedAt ?? new \DateTime());
     }
 
+    public function recordSkipped(FormDoiSubmission $submission, ?\DateTimeInterface $skippedAt = null): void
+    {
+        $this->record(
+            $submission,
+            DoiVerificationHistoryAction::SKIPPED,
+            $skippedAt ?? $submission->getDateCreated()
+        );
+    }
+
     private function record(
         FormDoiSubmission $submission,
         DoiVerificationHistoryAction $action,

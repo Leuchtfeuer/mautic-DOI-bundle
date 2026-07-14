@@ -7,7 +7,9 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Functional;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\FormBundle\Entity\Submission;
 use Mautic\LeadBundle\Entity\Lead;
+use Mautic\LeadBundle\Entity\LeadEventLog;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
+use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryMetadata;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use PHPUnit\Framework\Assert;
@@ -121,6 +123,14 @@ class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
         Assert::assertSame(FormDoiSubmission::SKIP_REASON_COOKIE_MATCH, $skippedDoiSubmission->getSkipReason(), 'Skip reason should be "cookie_match".');
         Assert::assertNotNull($skippedDoiSubmission->getDateConfirmed(), 'DateConfirmed should be set immediately on skip.');
         Assert::assertNotEquals($initialDoiSubmission->getId(), $skippedDoiSubmission->getId());
+
+        $logs = $this->em->getRepository(LeadEventLog::class)->findBy([
+            'bundle'   => DoiVerificationHistoryMetadata::BUNDLE,
+            'object'   => DoiVerificationHistoryMetadata::OBJECT,
+            'objectId' => $skippedDoiSubmission->getId(),
+            'action'   => 'skipped',
+        ]);
+        Assert::assertCount(1, $logs, 'Cookie-based skip should create a contact history entry.');
 
         // 8. Final sanity checks
         $coreSubmissionRepo = $this->em->getRepository(Submission::class);

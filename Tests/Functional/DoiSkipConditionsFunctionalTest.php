@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Functional;
 
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
+use Mautic\LeadBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Segment\OperatorOptions;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
+use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryMetadata;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use PHPUnit\Framework\Assert;
@@ -97,10 +99,31 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
             Assert::assertTrue($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');
             Assert::assertSame(FormDoiSubmission::SKIP_REASON_CONDITION_MATCH, $doiSubmission->getSkipReason(), 'Skip reason does not match.');
             Assert::assertNotNull($doiSubmission->getDateConfirmed(), 'DateConfirmed should be set immediately on skip.');
+
+            $logs = $this->em->getRepository(LeadEventLog::class)->findBy([
+                'bundle'   => DoiVerificationHistoryMetadata::BUNDLE,
+                'object'   => DoiVerificationHistoryMetadata::OBJECT,
+                'objectId' => $doiSubmission->getId(),
+                'action'   => 'skipped',
+            ]);
+            Assert::assertCount(1, $logs, 'Skipped verification should create a contact history entry.');
+            Assert::assertEquals(
+                $doiSubmission->getDateCreated()->format('Y-m-d H:i:s'),
+                $logs[0]->getDateAdded()->format('Y-m-d H:i:s'),
+                'History entry timestamp should match form submission time.'
+            );
         } else { // PENDING
             Assert::assertFalse($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be false for pending submissions.');
             Assert::assertNull($doiSubmission->getSkipReason(), 'Skip reason should be null for pending submissions.');
             Assert::assertNull($doiSubmission->getDateConfirmed(), 'DateConfirmed should be null for pending submissions.');
+
+            $logs = $this->em->getRepository(LeadEventLog::class)->findBy([
+                'bundle'   => DoiVerificationHistoryMetadata::BUNDLE,
+                'object'   => DoiVerificationHistoryMetadata::OBJECT,
+                'objectId' => $doiSubmission->getId(),
+                'action'   => 'skipped',
+            ]);
+            Assert::assertCount(0, $logs, 'Pending verification should not create a skipped history entry.');
         }
     }
 
