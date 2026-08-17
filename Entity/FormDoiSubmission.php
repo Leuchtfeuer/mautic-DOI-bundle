@@ -31,11 +31,11 @@ class FormDoiSubmission
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Submission::class)]
-    #[ORM\JoinColumn(name: 'form_submission_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'form_submission_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Submission $formSubmission = null;
 
     #[ORM\ManyToOne(targetEntity: Form::class)]
-    #[ORM\JoinColumn(name: 'form_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'form_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Form $form = null;
 
     #[ORM\ManyToOne(targetEntity: Lead::class)]
