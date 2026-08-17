@@ -14,10 +14,15 @@ use Mautic\LeadBundle\Entity\Lead;
 class FormDoiSubmission
 {
     public const STATUS_PENDING              = 'pending';
+
     public const STATUS_CONFIRMED            = 'confirmed';
+
     public const STATUS_SKIPPED              = 'skipped';
+
     public const STATUS_TIMEOUT              = 'timeout';
+
     public const SKIP_REASON_COOKIE_MATCH    = 'cookie_match';
+
     public const SKIP_REASON_CONDITION_MATCH = 'condition_match';
 
     #[ORM\Id]
@@ -26,11 +31,11 @@ class FormDoiSubmission
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Submission::class)]
-    #[ORM\JoinColumn(name: 'form_submission_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'form_submission_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Submission $formSubmission = null;
 
     #[ORM\ManyToOne(targetEntity: Form::class)]
-    #[ORM\JoinColumn(name: 'form_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'form_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Form $form = null;
 
     #[ORM\ManyToOne(targetEntity: Lead::class)]
