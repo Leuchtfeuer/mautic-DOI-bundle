@@ -135,7 +135,7 @@ class SubmissionCleanupService
             // when flushing the core submission removal.
             $this->entityManager->remove($doiSubmission);
 
-            // delete core Submission entity (cascades to FormDoiSubmission via FK)
+            // delete core Submission entity
             $this->entityManager->remove($coreSubmission);
 
             // Delete contact if it was created by this submission
