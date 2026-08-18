@@ -17,7 +17,9 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
     protected $useCleanupRollback = false;
 
     private DoiConfigManager $doiConfigManager;
+
     private PluginFixtureHelper $pluginFixtureHelper;
+
     private FormFixtureHelper $formFixtureHelper;
 
     protected function setUp(): void
@@ -139,6 +141,48 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $savedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
         $this->assertNotNull($savedDoiConfig);
         $this->assertFalse($savedDoiConfig->isEnabled());
+    }
+
+    public function testValidationFailsWhenSkipPostActionRedirectHasNoUrl(): void
+    {
+        $form              = $this->formFixtureHelper->createForm('Test Empty Skip Redirect', 'test_empty_skip_redirect');
+        $verificationEmail = $this->createEmail('Skip Redirect Verification Email');
+
+        $crawler     = $this->client->request('GET', sprintf('/s/forms/edit/%d', $form->getId()));
+        $formElement = $crawler->filterXPath('//form[@name="mauticform"]')->form();
+        $formElement->setValues([
+            'mauticform[doiConfig][enabled]'                => '1',
+            'mauticform[doiConfig][verificationEmailId]'    => $verificationEmail->getId(),
+            'mauticform[doiConfig][skipPostAction]'         => 'redirect',
+            'mauticform[doiConfig][skipPostActionProperty]' => '',
+        ]);
+
+        $crawler = $this->client->submit($formElement);
+
+        $this->assertTrue($this->client->getResponse()->isOk());
+        $this->assertStringContainsString('Fill in a valid URL.', $crawler->filter('body')->text());
+    }
+
+    public function testValidationAllowsEmptySkipPostActionPropertyForReturnAction(): void
+    {
+        $form              = $this->formFixtureHelper->createForm('Test Empty Skip Return', 'test_empty_skip_return');
+        $verificationEmail = $this->createEmail('Skip Return Verification Email');
+
+        $crawler     = $this->client->request('GET', sprintf('/s/forms/edit/%d', $form->getId()));
+        $formElement = $crawler->filterXPath('//form[@name="mauticform"]')->form();
+        $formElement->setValues([
+            'mauticform[doiConfig][enabled]'                => '1',
+            'mauticform[doiConfig][verificationEmailId]'    => $verificationEmail->getId(),
+            'mauticform[doiConfig][skipPostAction]'         => 'return',
+            'mauticform[doiConfig][skipPostActionProperty]' => '',
+        ]);
+
+        $this->client->submit($formElement);
+
+        $this->assertTrue($this->client->getResponse()->isOk());
+        $savedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
+        $this->assertNotNull($savedDoiConfig);
+        $this->assertSame('return', $savedDoiConfig->getSkipPostAction());
     }
 
     /**
