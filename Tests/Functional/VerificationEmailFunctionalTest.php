@@ -12,6 +12,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use PHPUnit\Framework\Assert;
+use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mime\Email as MimeEmail;
 
@@ -73,16 +74,28 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         $formElement->setValues([
             'mauticform[email]' => 'verifytest@example.com',
         ]);
-
+        foreach ($formElement->all() as $fieldName => $field) {
+            if (preg_match('/^mauticform\[checkbox_group]\[\d+]$/', $fieldName)
+                && $field instanceof ChoiceFormField
+                && in_array('1', $field->availableOptionValues(), true)) {
+                $field->tick();
+            }
+        }
         $this->client->submit($formElement);
         $this->assertResponseIsSuccessful();
 
         $submissions = $this->em->getRepository(Submission::class)->findAll();
         Assert::assertCount(1, $submissions);
-
         $doiSubmissions = $this->em->getRepository(FormDoiSubmission::class)->findAll();
         Assert::assertCount(1, $doiSubmissions);
         Assert::assertSame('pending', $doiSubmissions[0]->getStatus());
+        $consentSnapshot = $doiSubmissions[0]->getSubmittedConsentSnapshot();
+        Assert::assertIsArray($consentSnapshot);
+        Assert::assertCount(1, $consentSnapshot['fields']);
+        Assert::assertSame('checkbox_group', $consentSnapshot['fields'][0]['alias']);
+        Assert::assertSame('Checkbox group', $consentSnapshot['fields'][0]['label']);
+        Assert::assertSame('1', $consentSnapshot['fields'][0]['selected_options'][0]['value']);
+        Assert::assertSame('events consent', $consentSnapshot['fields'][0]['selected_options'][0]['label']);
 
         $messages = $this->getMailerMessagesByToAddress('verifytest@example.com');
         Assert::assertCount(1, $messages, 'Exactly one verification email should be sent');
@@ -91,6 +104,24 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         Assert::assertInstanceOf(MimeEmail::class, $message);
         Assert::assertStringContainsString('verifytest@example.com', $message->getTo()[0]->getAddress());
         Assert::assertStringContainsString('Verify', (string) $message->getHtmlBody());
+
+        $form->setCachedHtml('<form>Updated after submission</form>');
+        $this->em->flush();
+        $this->em->clear();
+
+        $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissions[0]->getId());
+        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        Assert::assertSame($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
+
+        $form = $this->em->getRepository(Form::class)->find($form->getId());
+        Assert::assertInstanceOf(Form::class, $form);
+        $this->em->remove($form);
+        $this->em->flush();
+        $this->em->clear();
+
+        $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmission->getId());
+        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        Assert::assertSame($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
     }
 
     private function createFormViaApi(string $name): Form
@@ -111,6 +142,19 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
                     'leadField'    => 'email',
                     'mappedField'  => 'email',
                     'mappedObject' => 'contact',
+                ],
+                [
+                    'label'      => 'Checkbox group',
+                    'alias'      => 'checkbox_group',
+                    'type'       => 'checkboxgrp',
+                    'properties' => [
+                        'syncList'   => 0,
+                        'optionlist' => [
+                            'list' => [
+                                ['label' => 'events consent', 'value' => '1'],
+                            ],
+                        ],
+                    ],
                 ],
                 [
                     'label' => 'Submit',

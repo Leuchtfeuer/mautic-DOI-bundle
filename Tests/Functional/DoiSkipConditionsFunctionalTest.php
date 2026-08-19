@@ -94,6 +94,9 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
 
         Assert::assertNotNull($doiSubmission, 'FormDoiSubmission was not created.');
         Assert::assertSame($expectedStatus, $doiSubmission->getStatus(), 'The DOI submission status is incorrect.');
+        $consentSnapshot = $doiSubmission->getSubmittedConsentSnapshot();
+        Assert::assertIsArray($consentSnapshot);
+        Assert::assertSame(1, $consentSnapshot['version']);
 
         if (FormDoiSubmission::STATUS_SKIPPED === $expectedStatus) {
             Assert::assertTrue($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');

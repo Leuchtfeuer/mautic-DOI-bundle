@@ -38,6 +38,12 @@ class FormDoiSubmission
     #[ORM\JoinColumn(name: 'form_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Form $form = null;
 
+    /**
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(name: 'submitted_consent_snapshot', type: 'json', nullable: true)]
+    private ?array $submittedConsentSnapshot = null;
+
     #[ORM\ManyToOne(targetEntity: Lead::class)]
     #[ORM\JoinColumn(name: 'lead_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Lead $lead = null;
@@ -103,6 +109,24 @@ class FormDoiSubmission
     public function getForm(): ?Form
     {
         return $this->form;
+    }
+
+    /**
+     * @param array<string, mixed>|null $submittedConsentSnapshot
+     */
+    public function setSubmittedConsentSnapshot(?array $submittedConsentSnapshot): self
+    {
+        $this->submittedConsentSnapshot = $submittedConsentSnapshot;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getSubmittedConsentSnapshot(): ?array
+    {
+        return $this->submittedConsentSnapshot;
     }
 
     public function setLead(?Lead $lead): self

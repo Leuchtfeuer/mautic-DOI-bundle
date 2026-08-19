@@ -24,6 +24,7 @@ class VerificationEmailSender
         private FormDoiSubmissionManager $doiSubmissionManager,
         private DoiTokenParser $doiTokenParser,
         private LoggerInterface $logger,
+        private ConsentSnapshotBuilder $consentSnapshotBuilder,
     ) {
     }
 
@@ -83,13 +84,15 @@ class VerificationEmailSender
 
     private function createDoiSubmission(SubmissionEvent $event, Form $form, Lead $contact): FormDoiSubmission
     {
-        $formSubmission = $event->getSubmission();
-        $hash           = $this->doiHashGenerator->generate($formSubmission->getId(), $contact->getEmail());
+        $formSubmission  = $event->getSubmission();
+        $hash            = $this->doiHashGenerator->generate($formSubmission->getId(), $contact->getEmail());
+        $submittedValues = array_replace($formSubmission->getResults(), $event->getPost());
 
         $doiSubmission = new FormDoiSubmission();
         $doiSubmission
             ->setFormSubmission($formSubmission)
             ->setForm($form)
+            ->setSubmittedConsentSnapshot($this->consentSnapshotBuilder->build($form, $submittedValues))
             ->setLead($contact)
             ->setEmail($contact->getEmail())
             ->setHash($hash)
