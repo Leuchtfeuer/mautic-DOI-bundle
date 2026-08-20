@@ -11,6 +11,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerDoiBundle\Model\DoiConfigManager;
 use MauticPlugin\LeuchtfeuerDoiBundle\Model\FormDoiSubmissionManager;
+use MauticPlugin\LeuchtfeuerDoiBundle\Service\ConsentSnapshotBuilder;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiActionsDispatcher;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiHashGenerator;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiVerificationHistoryRecorder;
@@ -29,6 +30,7 @@ class FormSubmissionSubscriber implements EventSubscriberInterface
         private DoiActionsDispatcher $actionsDispatcher,
         private DoiHashGenerator $hashGenerator,
         private DoiVerificationHistoryRecorder $verificationHistoryRecorder,
+        private ConsentSnapshotBuilder $consentSnapshotBuilder,
     ) {
     }
 
@@ -85,12 +87,14 @@ class FormSubmissionSubscriber implements EventSubscriberInterface
         }
 
         // Create a DOI submission record marked as skipped
-        $hash = $this->hashGenerator->generate($formSubmission->getId(), $contact->getEmail());
+        $hash            = $this->hashGenerator->generate($formSubmission->getId(), $contact->getEmail());
+        $submittedValues = array_replace($formSubmission->getResults(), $event->getPost());
 
         $doiSubmission = new FormDoiSubmission();
         $doiSubmission
             ->setFormSubmission($formSubmission)
             ->setForm($form)
+            ->setSubmittedConsentSnapshot($this->consentSnapshotBuilder->build($form, $submittedValues, $event->getRequest()))
             ->setLead($contact)
             ->setEmail($contact->getEmail())
             ->setHash($hash)

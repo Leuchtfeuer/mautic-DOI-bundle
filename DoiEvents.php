@@ -7,6 +7,11 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle;
 final class DoiEvents
 {
     /**
+     * Dispatched to resolve consent snapshot labels before persistence.
+     */
+    public const DOI_ON_RESOLVE_CONSENT_SNAPSHOT = 'leuchtfeuer.doi.on_resolve_consent_snapshot';
+
+    /**
      * Dispatched when verification is skipped and a custom post-action should be executed.
      */
     public const DOI_ON_SKIP_POST_ACTION = 'leuchtfeuer.doi.on_skip_post_action';
