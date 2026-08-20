@@ -124,7 +124,7 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
 
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissions[0]->getId());
         Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
-        Assert::assertSame($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
+        Assert::assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
 
         $form = $this->em->getRepository(Form::class)->find($form->getId());
         Assert::assertInstanceOf(Form::class, $form);
@@ -134,7 +134,7 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
 
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmission->getId());
         Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
-        Assert::assertSame($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
+        Assert::assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
     }
 
     private function createFormViaApi(string $name): Form
