@@ -92,7 +92,7 @@ class VerificationEmailSender
         $doiSubmission
             ->setFormSubmission($formSubmission)
             ->setForm($form)
-            ->setSubmittedConsentSnapshot($this->consentSnapshotBuilder->build($form, $submittedValues))
+            ->setSubmittedConsentSnapshot($this->consentSnapshotBuilder->build($form, $submittedValues, $event->getRequest()))
             ->setLead($contact)
             ->setEmail($contact->getEmail())
             ->setHash($hash)

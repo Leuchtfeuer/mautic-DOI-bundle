@@ -6,15 +6,26 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Service;
 
 use Mautic\FormBundle\Entity\Field;
 use Mautic\FormBundle\Entity\Form;
+use MauticPlugin\LeuchtfeuerDoiBundle\DoiEvents;
+use MauticPlugin\LeuchtfeuerDoiBundle\Event\ResolveConsentSnapshotEvent;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 final class ConsentSnapshotBuilder
 {
+    public function __construct(
+        private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger,
+    ) {
+    }
+
     /**
      * @param array<string, mixed> $submittedValues
      *
      * @return array<string, mixed>
      */
-    public function build(Form $form, array $submittedValues): array
+    public function build(Form $form, array $submittedValues, Request $request): array
     {
         $fields = [];
 
@@ -45,10 +56,24 @@ final class ConsentSnapshotBuilder
             ];
         }
 
-        return [
+        $sourceSnapshot = [
             'version' => 1,
             'fields'  => $fields,
         ];
+
+        try {
+            $event = new ResolveConsentSnapshotEvent($sourceSnapshot, $form, $request);
+            $this->eventDispatcher->dispatch($event, DoiEvents::DOI_ON_RESOLVE_CONSENT_SNAPSHOT);
+
+            return $event->getSnapshot();
+        } catch (\Throwable $exception) {
+            $this->logger->warning('DOI consent snapshot label resolution failed', [
+                'form_id'   => $form->getId(),
+                'exception' => $exception,
+            ]);
+
+            return $sourceSnapshot;
+        }
     }
 
     /**

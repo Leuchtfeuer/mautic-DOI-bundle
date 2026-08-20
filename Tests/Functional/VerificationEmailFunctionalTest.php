@@ -8,8 +8,10 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\FormBundle\Entity\Form;
 use Mautic\FormBundle\Entity\Submission;
+use MauticPlugin\LeuchtfeuerDoiBundle\DoiEvents;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
+use MauticPlugin\LeuchtfeuerDoiBundle\Event\ResolveConsentSnapshotEvent;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use PHPUnit\Framework\Assert;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
@@ -62,6 +64,7 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
 
     public function testVerificationEmailIsSentOnFormSubmit(): void
     {
+        $this->client->disableReboot();
         $form = $this->createFormViaApi('VerificationEmailTestForm'.uniqid());
 
         $verificationEmail = $this->createEmailViaApi('Verification Email '.uniqid());
@@ -71,6 +74,16 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
         $formCrawler = $crawler->filter('form[id=mauticform_'.strtolower($form->getName()).']');
         $formElement = $formCrawler->form();
+        $session     = $this->client->getRequest()->getSession();
+        $session->set('consent_label_prefix', 'resolved ');
+        $session->save();
+        self::getContainer()->get('event_dispatcher')->addListener(
+            DoiEvents::DOI_ON_RESOLVE_CONSENT_SNAPSHOT,
+            static function (ResolveConsentSnapshotEvent $event): void {
+                $prefix = $event->getRequest()->getSession()->get('consent_label_prefix');
+                $event->transformLabels(static fn (string $label): string => $prefix.$label);
+            }
+        );
         $formElement->setValues([
             'mauticform[email]' => 'verifytest@example.com',
         ]);
@@ -93,9 +106,9 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         Assert::assertIsArray($consentSnapshot);
         Assert::assertCount(1, $consentSnapshot['fields']);
         Assert::assertSame('checkbox_group', $consentSnapshot['fields'][0]['alias']);
-        Assert::assertSame('Checkbox group', $consentSnapshot['fields'][0]['label']);
+        Assert::assertSame('resolved Checkbox group', $consentSnapshot['fields'][0]['label']);
         Assert::assertSame('1', $consentSnapshot['fields'][0]['selected_options'][0]['value']);
-        Assert::assertSame('events consent', $consentSnapshot['fields'][0]['selected_options'][0]['label']);
+        Assert::assertSame('resolved events consent', $consentSnapshot['fields'][0]['selected_options'][0]['label']);
 
         $messages = $this->getMailerMessagesByToAddress('verifytest@example.com');
         Assert::assertCount(1, $messages, 'Exactly one verification email should be sent');
