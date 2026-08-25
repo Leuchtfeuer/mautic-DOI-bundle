@@ -8,10 +8,13 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\FormBundle\Entity\Form;
 use Mautic\FormBundle\Entity\Submission;
+use MauticPlugin\LeuchtfeuerDoiBundle\DoiEvents;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
+use MauticPlugin\LeuchtfeuerDoiBundle\Event\ResolveConsentSnapshotEvent;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use PHPUnit\Framework\Assert;
+use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mime\Email as MimeEmail;
 
@@ -61,6 +64,7 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
 
     public function testVerificationEmailIsSentOnFormSubmit(): void
     {
+        $this->client->disableReboot();
         $form = $this->createFormViaApi('VerificationEmailTestForm'.uniqid());
 
         $verificationEmail = $this->createEmailViaApi('Verification Email '.uniqid());
@@ -70,19 +74,41 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
         $formCrawler = $crawler->filter('form[id=mauticform_'.strtolower($form->getName()).']');
         $formElement = $formCrawler->form();
+        $session     = $this->client->getRequest()->getSession();
+        $session->set('consent_label_prefix', 'resolved ');
+        $session->save();
+        self::getContainer()->get('event_dispatcher')->addListener(
+            DoiEvents::DOI_ON_RESOLVE_CONSENT_SNAPSHOT,
+            static function (ResolveConsentSnapshotEvent $event): void {
+                $prefix = $event->getRequest()->getSession()->get('consent_label_prefix');
+                $event->transformLabels(static fn (string $label): string => $prefix.$label);
+            }
+        );
         $formElement->setValues([
             'mauticform[email]' => 'verifytest@example.com',
         ]);
-
+        foreach ($formElement->all() as $fieldName => $field) {
+            if (preg_match('/^mauticform\[checkbox_group]\[\d+]$/', $fieldName)
+                && $field instanceof ChoiceFormField
+                && in_array('1', $field->availableOptionValues(), true)) {
+                $field->tick();
+            }
+        }
         $this->client->submit($formElement);
         $this->assertResponseIsSuccessful();
 
         $submissions = $this->em->getRepository(Submission::class)->findAll();
         Assert::assertCount(1, $submissions);
-
         $doiSubmissions = $this->em->getRepository(FormDoiSubmission::class)->findAll();
         Assert::assertCount(1, $doiSubmissions);
         Assert::assertSame('pending', $doiSubmissions[0]->getStatus());
+        $consentSnapshot = $doiSubmissions[0]->getSubmittedConsentSnapshot();
+        Assert::assertIsArray($consentSnapshot);
+        Assert::assertCount(1, $consentSnapshot['fields']);
+        Assert::assertSame('checkbox_group', $consentSnapshot['fields'][0]['alias']);
+        Assert::assertSame('resolved Checkbox group', $consentSnapshot['fields'][0]['label']);
+        Assert::assertSame('1', $consentSnapshot['fields'][0]['selected_options'][0]['value']);
+        Assert::assertSame('resolved events consent', $consentSnapshot['fields'][0]['selected_options'][0]['label']);
 
         $messages = $this->getMailerMessagesByToAddress('verifytest@example.com');
         Assert::assertCount(1, $messages, 'Exactly one verification email should be sent');
@@ -91,6 +117,24 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         Assert::assertInstanceOf(MimeEmail::class, $message);
         Assert::assertStringContainsString('verifytest@example.com', $message->getTo()[0]->getAddress());
         Assert::assertStringContainsString('Verify', (string) $message->getHtmlBody());
+
+        $form->setCachedHtml('<form>Updated after submission</form>');
+        $this->em->flush();
+        $this->em->clear();
+
+        $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissions[0]->getId());
+        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        Assert::assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
+
+        $form = $this->em->getRepository(Form::class)->find($form->getId());
+        Assert::assertInstanceOf(Form::class, $form);
+        $this->em->remove($form);
+        $this->em->flush();
+        $this->em->clear();
+
+        $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmission->getId());
+        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        Assert::assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
     }
 
     private function createFormViaApi(string $name): Form
@@ -111,6 +155,19 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
                     'leadField'    => 'email',
                     'mappedField'  => 'email',
                     'mappedObject' => 'contact',
+                ],
+                [
+                    'label'      => 'Checkbox group',
+                    'alias'      => 'checkbox_group',
+                    'type'       => 'checkboxgrp',
+                    'properties' => [
+                        'syncList'   => 0,
+                        'optionlist' => [
+                            'list' => [
+                                ['label' => 'events consent', 'value' => '1'],
+                            ],
+                        ],
+                    ],
                 ],
                 [
                     'label' => 'Submit',

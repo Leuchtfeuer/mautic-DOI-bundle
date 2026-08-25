@@ -7,8 +7,10 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Functional;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\LeadBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Segment\OperatorOptions;
+use MauticPlugin\LeuchtfeuerDoiBundle\DoiEvents;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryMetadata;
+use MauticPlugin\LeuchtfeuerDoiBundle\Event\ResolveConsentSnapshotEvent;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use PHPUnit\Framework\Assert;
@@ -94,6 +96,9 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
 
         Assert::assertNotNull($doiSubmission, 'FormDoiSubmission was not created.');
         Assert::assertSame($expectedStatus, $doiSubmission->getStatus(), 'The DOI submission status is incorrect.');
+        $consentSnapshot = $doiSubmission->getSubmittedConsentSnapshot();
+        Assert::assertIsArray($consentSnapshot);
+        Assert::assertSame(1, $consentSnapshot['version']);
 
         if (FormDoiSubmission::STATUS_SKIPPED === $expectedStatus) {
             Assert::assertTrue($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');
@@ -125,6 +130,58 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
             ]);
             Assert::assertCount(0, $logs, 'Pending verification should not create a skipped history entry.');
         }
+    }
+
+    public function testSkippedSubmissionPersistsLabelsResolvedFromSubmissionRequest(): void
+    {
+        $this->client->disableReboot();
+        $form = $this->formFixtureHelper->createComplexFormViaApi('Resolved Consent Skip Test');
+        $this->formFixtureHelper->createDoiConfig($form, skipConditions: [[
+            'glue'       => 'and',
+            'operator'   => OperatorOptions::EQUAL_TO,
+            'properties' => ['filter' => 'Poland'],
+            'field'      => 'country',
+            'type'       => 'country',
+            'object'     => 'lead',
+        ]]);
+
+        $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
+        $formElement = $crawler->filter('form[id=mauticform_resolvedconsentskiptest]')->form();
+        $session     = $this->client->getRequest()->getSession();
+        $session->set('consent_label_prefix', 'resolved ');
+        $session->save();
+        self::getContainer()->get('event_dispatcher')->addListener(
+            DoiEvents::DOI_ON_RESOLVE_CONSENT_SNAPSHOT,
+            static function (ResolveConsentSnapshotEvent $event): void {
+                $prefix = $event->getRequest()->getSession()->get('consent_label_prefix');
+                $event->transformLabels(static fn (string $label): string => $prefix.$label);
+            }
+        );
+        $formElement->setValues([
+            'mauticform[email]'   => 'resolved-skip@example.com',
+            'mauticform[country]' => 'Poland',
+        ]);
+        $this->handleCheckboxValues($formElement, 'interests', ['tech']);
+
+        $this->client->submit($formElement);
+        self::assertResponseIsSuccessful();
+
+        $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->findOneBy([
+            'email' => 'resolved-skip@example.com',
+        ]);
+        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        Assert::assertSame(FormDoiSubmission::STATUS_SKIPPED, $doiSubmission->getStatus());
+        Assert::assertSame([
+            'version' => 1,
+            'fields'  => [[
+                'alias'            => 'interests',
+                'label'            => 'resolved Interests',
+                'selected_options' => [[
+                    'value' => 'tech',
+                    'label' => 'resolved Technology',
+                ]],
+            ]],
+        ], $doiSubmission->getSubmittedConsentSnapshot());
     }
 
     /**
