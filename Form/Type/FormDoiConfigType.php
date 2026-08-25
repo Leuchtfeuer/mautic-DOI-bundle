@@ -138,7 +138,13 @@ class FormDoiConfigType extends AbstractType
                     'class'         => 'form-control',
                     'tooltip'       => 'mautic.plugin.doi.form.field.skip_post_action_property.tooltip',
                 ],
-                'required'   => false,
+                'required'    => false,
+                'constraints' => [
+                    new NotBlank([
+                        'message' => 'mautic.form.form.postactionproperty_redirect.notblank',
+                        'groups'  => ['skip_redirect'],
+                    ]),
+                ],
             ]);
 
         $builder->add('deleteAfterTimeout', YesNoButtonGroupType::class, [
@@ -189,6 +195,10 @@ class FormDoiConfigType extends AbstractType
 
                 if (isset($data['enabled']) && $data['enabled']) {
                     $groups[] = 'doi_enabled';
+                }
+
+                if ('redirect' === ($data['skipPostAction'] ?? null)) {
+                    $groups[] = 'skip_redirect';
                 }
 
                 return $groups;
