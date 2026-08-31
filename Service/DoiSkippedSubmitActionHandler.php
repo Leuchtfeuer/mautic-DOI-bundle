@@ -9,8 +9,8 @@ use MauticPlugin\LeuchtfeuerDoiBundle\DoiEvents;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -19,7 +19,7 @@ class DoiSkippedSubmitActionHandler
     public function __construct(
         private TranslatorInterface $translator,
         private UrlGeneratorInterface $urlGenerator,
-        private SessionInterface $session,
+        private RequestStack $requestStack,
         private EventDispatcherInterface $eventDispatcher,
     ) {
     }
@@ -113,7 +113,7 @@ class DoiSkippedSubmitActionHandler
             ];
         }
 
-        $this->session->set('mautic.emailbundle.message', ['message' => $message]);
+        $this->requestStack->getSession()->set('mautic.emailbundle.message', ['message' => $message]);
 
         return new RedirectResponse($this->urlGenerator->generate('mautic_form_postmessage'));
     }
@@ -137,7 +137,7 @@ class DoiSkippedSubmitActionHandler
             ];
         }
 
-        $this->session->set('mautic.emailbundle.message', ['message' => $message]);
+        $this->requestStack->getSession()->set('mautic.emailbundle.message', ['message' => $message]);
 
         return new RedirectResponse($this->urlGenerator->generate('mautic_form_postmessage'));
     }
