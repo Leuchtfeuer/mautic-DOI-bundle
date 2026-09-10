@@ -89,7 +89,6 @@ and
 - Honeypot support: NHI field awareness and handling.
 - DOI email restriction: Only show emails containing `{doi_link}` token.
 - Audit trail (future): Optional contact field audit log (leads.emailverifications_audit) for verification events.
-- Persist content of checkbox field at time of consent
 
 
 ## Sponsoring & Commercial Support
