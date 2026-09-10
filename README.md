@@ -11,6 +11,7 @@ Universal email verification plugin for Mautic, providing Double Opt-In (DOI) fu
 - **Flexible Redirects**: Configurable success/error pages after verification
 - **Security**: HMAC-based hash generation for verification links
 - **Console Commands**: Cron-compatible follow-up email sending, timeout processing, and optional cleanup of expired submissions
+- **Compliance**: Snapshots field labels and submitted values at the point of submission, so historical DOI records stay accurate and readable even if the form or its fields change later
 
 ## Requirements for this release
 > [!TIP]
@@ -76,9 +77,7 @@ and
 - https://github.com/Leuchtfeuer/mautic-DOI-bundle/releases
   
 ## Future Ideas
-- Conditional actions: Update contact fields based on form field logic (currently doable via campaigns).
 - Campaign integration: Start campaign from form action with conditional contact updates (e.g. MOI=1).
-- Form submission handling: Persist form field status at submission (forms.cached_html → form_submissions.doi_formstatus).
 - Missing email handling: Manage cases with empty or unmapped leads.email.
 - Form action – Update Marketing Opt-In: Convenience action to set MOI fields and audit values.
 - MOI data model: Fixed fields or dedicated table for bool + audit tracking.
