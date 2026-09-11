@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'name'        => 'Email Verification and Double Opt-In (DOI) by Leuchtfeuer',
     'description' => 'Universal email verification for Mautic, including Double Opt-In (DOI)',
-    'version'     => '5.4.1',
+    'version'     => '5.4.0',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'routes'      => [
         'main' => [
