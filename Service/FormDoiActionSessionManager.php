@@ -2,14 +2,14 @@
 
 namespace MauticPlugin\LeuchtfeuerDoiBundle\Service;
 
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class FormDoiActionSessionManager
 {
     private const SESSION_KEY_PREFIX = 'mautic.form.';
     private const SESSION_KEY_SUFFIX = '.actions.doi_verified';
 
-    public function __construct(private SessionInterface $session)
+    public function __construct(private RequestStack $requestStack)
     {
     }
 
@@ -25,7 +25,7 @@ class FormDoiActionSessionManager
             $modifiedActions[$id] = $action;
         }
 
-        $this->session->set($this->getSessionKey($formId), $modifiedActions);
+        $this->requestStack->getSession()->set($this->getSessionKey($formId), $modifiedActions);
     }
 
     /**
@@ -33,7 +33,7 @@ class FormDoiActionSessionManager
      */
     public function getActionsFromSession(int|string $formId): array
     {
-        return $this->session->get($this->getSessionKey($formId), []);
+        return $this->requestStack->getSession()->get($this->getSessionKey($formId), []);
     }
 
     /**
