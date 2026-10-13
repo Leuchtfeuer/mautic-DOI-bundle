@@ -1,8 +1,5 @@
-# Includes resolve relative to this file, so the stub OM path stays correct both
-# for local `composer phpstan` and when CI merges/runs against the Mautic root.
-
-includes:
-    - phpstan/doctrine-parameters.php
+# Merged into the Mautic-root phpstan.neon by mautic-ci-runner — all paths are
+# root-relative. Local `composer phpstan` uses the root config (same as CI).
 
 parameters:
     level: 6
@@ -15,19 +12,16 @@ parameters:
         processTimeout: 1000.0
 
     bootstrapFiles:
-        - phpstan-bootstrap.php
-
-    paths:
-        - .
+        - plugins/LeuchtfeuerDoiBundle/phpstan-bootstrap.php
 
     excludePaths:
-        - vendor
-        - var
-        - Tests
-        - phpstan
-        - phpstan-bootstrap.php
         - plugins/LeuchtfeuerDoiBundle/Tests
         - plugins/LeuchtfeuerDoiBundle/phpstan
+        - plugins/LeuchtfeuerDoiBundle/phpstan-bootstrap.php
+
+    doctrine:
+        objectManagerLoader: plugins/LeuchtfeuerDoiBundle/phpstan/object-manager.php
+        allowNullablePropertyForRequiredField: true
 
     dynamicConstantNames:
         - MAUTIC_ENV
