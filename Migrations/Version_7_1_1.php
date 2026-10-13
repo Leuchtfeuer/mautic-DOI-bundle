@@ -72,7 +72,7 @@ class Version_7_1_1 extends AbstractMigration
         }
 
         if ($table->getColumn($columnName)->getNotnull()) {
-            $referencedTableSchema = $this->schema->getTable($this->concatPrefix($referencedTable));
+            $referencedTableSchema = MigrationHelper::requireTable($this->schema, $this->concatPrefix($referencedTable));
             $columnType            = MigrationHelper::getReferencedColumnType($referencedTableSchema);
             $this->addSql(sprintf('ALTER TABLE `%s` MODIFY `%s` %s DEFAULT NULL', $tableName, $columnName, $columnType));
         }

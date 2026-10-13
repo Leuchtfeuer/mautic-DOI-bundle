@@ -4,58 +4,43 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerDoiBundle\EventListener;
 
-use Mautic\PluginBundle\Bundle\PluginDatabase;
+use Doctrine\ORM\EntityManagerInterface;
+use Mautic\IntegrationsBundle\Migration\Engine;
 use Mautic\PluginBundle\Event\PluginInstallEvent;
-use Mautic\PluginBundle\Event\PluginUpdateEvent;
 use Mautic\PluginBundle\PluginEvents;
-use MauticPlugin\LeuchtfeuerDoiBundle\Service\LastDoiDateFieldInstaller;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\TablePrefixResolver;
+use MauticPlugin\LeuchtfeuerDoiBundle\LeuchtfeuerDoiBundle;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class PluginInstallSubscriber implements EventSubscriberInterface
+final class PluginInstallSubscriber implements EventSubscriberInterface
 {
-    /**
-     * Plugin name as defined in Config/config.php; matched against Plugin::getName().
-     */
-    private const PLUGIN_NAME = 'Email Verification and Double Opt-In (DOI) by Leuchtfeuer';
-
     public function __construct(
-        private readonly PluginDatabase $pluginDatabase,
-        private readonly LastDoiDateFieldInstaller $lastDoiDateFieldInstaller,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 
-    public function onInstall(PluginInstallEvent $event): void
-    {
-        if (!$event->checkContext(self::PLUGIN_NAME)) {
-            return;
-        }
-
-        // Run DB migrations instead of automatic schema update
-        $this->pluginDatabase->onPluginUpdate($event->getPlugin());
-
-        $this->lastDoiDateFieldInstaller->installIfMissing();
-
-        // Prevent core PluginSubscriber from trying to create schema
-        $event->stopPropagation();
-    }
-
-    public function onUpdate(PluginUpdateEvent $event): void
-    {
-        if (!$event->checkContext(self::PLUGIN_NAME)) {
-            return;
-        }
-
-        $this->lastDoiDateFieldInstaller->installIfMissing();
-    }
-
-    /**
-     * @return array<string, string|array{0: string, 1: int}|list<array{0: string, 1?: int}>>
-     */
     public static function getSubscribedEvents(): array
     {
         return [
-            PluginEvents::ON_PLUGIN_INSTALL => ['onInstall', 10],
-            PluginEvents::ON_PLUGIN_UPDATE  => ['onUpdate', 0],
+            PluginEvents::ON_PLUGIN_INSTALL => ['onPluginInstall', 0],
         ];
+    }
+
+    public function onPluginInstall(PluginInstallEvent $event): void
+    {
+        if (!$event->checkContext(LeuchtfeuerDoiBundle::class)) {
+            return;
+        }
+
+        // Resolve prefix from Form metadata so install honors MAUTIC_TABLE_PREFIX
+        // even when the env var alone would leave migrations looking for unprefixed tables.
+        $migrationEngine = new Engine(
+            $this->em,
+            TablePrefixResolver::resolve($this->em),
+            dirname(__DIR__),
+            'LeuchtfeuerDoiBundle'
+        );
+
+        $migrationEngine->up();
     }
 }

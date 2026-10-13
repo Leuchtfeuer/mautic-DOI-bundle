@@ -27,9 +27,9 @@ class Version_0_0_3 extends AbstractMigration
 
     protected function up(): void
     {
-        $formsTable                  = $this->schema->getTable($this->concatPrefix('forms'));
-        $formSubmissionsTable        = $this->schema->getTable($this->concatPrefix('form_submissions'));
-        $leadsTable                  = $this->schema->getTable($this->concatPrefix('leads'));
+        $formsTable                  = MigrationHelper::requireTable($this->schema, $this->concatPrefix('forms'));
+        $formSubmissionsTable        = MigrationHelper::requireTable($this->schema, $this->concatPrefix('form_submissions'));
+        $leadsTable                  = MigrationHelper::requireTable($this->schema, $this->concatPrefix('leads'));
         $formsIdColumnType           = MigrationHelper::getReferencedColumnType($formsTable);
         $formSubmissionsIdColumnType = MigrationHelper::getReferencedColumnType($formSubmissionsTable);
         $leadsIdColumnType           = MigrationHelper::getReferencedColumnType($leadsTable);
