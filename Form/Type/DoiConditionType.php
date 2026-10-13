@@ -19,8 +19,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class DoiConditionType extends AbstractType
 {
     public function __construct(
-        private FormAdjustmentsProviderInterface $formAdjustmentsProvider,
-        private AvailableSkipOptions $availableOptionsProvider,
+        private readonly FormAdjustmentsProviderInterface $formAdjustmentsProvider,
+        private readonly AvailableSkipOptions $availableOptionsProvider,
     ) {
     }
 

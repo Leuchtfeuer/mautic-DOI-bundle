@@ -21,8 +21,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class SkipConditionType extends AbstractType
 {
     public function __construct(
-        private FormAdjustmentsProviderInterface $formAdjustmentsProvider,
-        private AvailableSkipOptions $availableSkipOptions,
+        private readonly FormAdjustmentsProviderInterface $formAdjustmentsProvider,
+        private readonly AvailableSkipOptions $availableSkipOptions,
     ) {
     }
 

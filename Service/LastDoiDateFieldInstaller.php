@@ -10,7 +10,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Enum\LastDoiDateField;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-final class LastDoiDateFieldInstaller
+final readonly class LastDoiDateFieldInstaller
 {
     public function __construct(
         private FieldModel $fieldModel,

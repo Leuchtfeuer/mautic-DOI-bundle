@@ -14,7 +14,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class FormDoiActionConditionsConfigType extends AbstractType
 {
     public function __construct(
-        private AvailableSkipOptions $availableOptionsProvider,
+        private readonly AvailableSkipOptions $availableOptionsProvider,
     ) {
     }
 

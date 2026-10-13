@@ -9,9 +9,8 @@ use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 
-class FormDoiSubmissionFunctionalTest extends MauticMysqlTestCase
+final class FormDoiSubmissionFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -30,16 +29,16 @@ class FormDoiSubmissionFunctionalTest extends MauticMysqlTestCase
 
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($submissionId);
 
-        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
-        Assert::assertNull($doiSubmission->getForm());
-        Assert::assertNull($doiSubmission->getFormSubmission());
+        $this->assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        $this->assertNotInstanceOf(\Mautic\FormBundle\Entity\Form::class, $doiSubmission->getForm());
+        $this->assertNotInstanceOf(\Mautic\FormBundle\Entity\Submission::class, $doiSubmission->getFormSubmission());
         $lead = $doiSubmission->getLead();
-        Assert::assertInstanceOf(Lead::class, $lead);
-        Assert::assertSame($leadId, $lead->getId());
+        $this->assertInstanceOf(Lead::class, $lead);
+        $this->assertSame($leadId, $lead->getId());
         $this->em->remove($lead);
         $this->em->flush();
         $this->em->clear();
 
-        Assert::assertNull($this->em->getRepository(FormDoiSubmission::class)->find($submissionId));
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $this->em->getRepository(FormDoiSubmission::class)->find($submissionId));
     }
 }

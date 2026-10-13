@@ -26,18 +26,18 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class PublicController extends AbstractController
 {
     public function __construct(
-        private FormRepository $formRepository,
-        private FormDoiSubmissionRepository $submissionRepository,
-        private FormDoiConfigRepository $configRepository,
-        private FormDoiSubmissionManager $submissionManager,
-        private DoiTokenParser $doiTokenParser,
-        private TranslatorInterface $translator,
-        private LoggerInterface $logger,
-        private DoiActionsDispatcher $doiActionsDispatcher,
-        private ContactTracker $contactTracker,
-        private Config $config,
-        private DoiVerificationHistoryRecorder $verificationHistoryRecorder,
-        private ContactLastDoiDateUpdater $contactLastDoiDateUpdater,
+        private readonly FormRepository $formRepository,
+        private readonly FormDoiSubmissionRepository $submissionRepository,
+        private readonly FormDoiConfigRepository $configRepository,
+        private readonly FormDoiSubmissionManager $submissionManager,
+        private readonly DoiTokenParser $doiTokenParser,
+        private readonly TranslatorInterface $translator,
+        private readonly LoggerInterface $logger,
+        private readonly DoiActionsDispatcher $doiActionsDispatcher,
+        private readonly ContactTracker $contactTracker,
+        private readonly Config $config,
+        private readonly DoiVerificationHistoryRecorder $verificationHistoryRecorder,
+        private readonly ContactLastDoiDateUpdater $contactLastDoiDateUpdater,
     ) {
     }
 

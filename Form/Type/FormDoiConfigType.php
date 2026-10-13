@@ -26,9 +26,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class FormDoiConfigType extends AbstractType
 {
     public function __construct(
-        private TranslatorInterface $translator,
-        private AvailableSkipOptions $availableSkipOptions,
-        private RelativeDate $relativeDate,
+        private readonly TranslatorInterface $translator,
+        private readonly AvailableSkipOptions $availableSkipOptions,
+        private readonly RelativeDate $relativeDate,
     ) {
     }
 
@@ -60,10 +60,7 @@ class FormDoiConfigType extends AbstractType
                     'tooltip' => 'mautic.plugin.doi.form.field.verification_email.tooltip',
                 ],
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'mautic.plugin.doi.form.field.verification_email.required',
-                        'groups'  => ['doi_enabled'],
-                    ]),
+                    new NotBlank(message: 'mautic.plugin.doi.form.field.verification_email.required', groups: ['doi_enabled']),
                 ],
             ])
             ->add('followUpEmailId', EmailListType::class, [
@@ -86,10 +83,7 @@ class FormDoiConfigType extends AbstractType
                     'tooltip' => 'mautic.plugin.doi.form.field.success_redirect_url.tooltip',
                 ],
                 'constraints' => [
-                    new Url([
-                        'message' => 'mautic.core.valid_url_required',
-                        'groups'  => ['doi_config'],
-                    ]),
+                    new Url(message: 'mautic.core.valid_url_required', groups: ['doi_config']),
                 ],
             ])
             ->add('errorRedirectUrl', UrlType::class, [
@@ -101,10 +95,7 @@ class FormDoiConfigType extends AbstractType
                     'tooltip' => 'mautic.plugin.doi.form.field.error_redirect_url.tooltip',
                 ],
                 'constraints' => [
-                    new Url([
-                        'message' => 'mautic.core.valid_url_required',
-                        'groups'  => ['doi_config'],
-                    ]),
+                    new Url(message: 'mautic.core.valid_url_required', groups: ['doi_config']),
                 ],
             ]);
 
@@ -142,10 +133,7 @@ class FormDoiConfigType extends AbstractType
                 ],
                 'required'    => false,
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'mautic.form.form.postactionproperty_redirect.notblank',
-                        'groups'  => ['skip_redirect'],
-                    ]),
+                    new NotBlank(message: 'mautic.form.form.postactionproperty_redirect.notblank', groups: ['skip_redirect']),
                 ],
             ]);
 

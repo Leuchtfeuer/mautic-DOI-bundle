@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Helper;
+namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Unit\Helper;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -10,11 +10,9 @@ use Mautic\FormBundle\Entity\Form;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\TablePrefixResolver;
 use PHPUnit\Framework\TestCase;
 
-class TablePrefixResolverTest extends TestCase
+final class TablePrefixResolverTest extends TestCase
 {
-    /**
-     * @dataProvider provideFormTableNames
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideFormTableNames')]
     public function testResolveDerivesPrefixFromFormMetadata(string $formsTableName, string $expectedPrefix): void
     {
         $metadata = $this->createMock(ClassMetadata::class);

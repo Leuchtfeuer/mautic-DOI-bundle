@@ -16,7 +16,7 @@ class ConditionBuilderController extends AbstractController
 {
     private const TMP_NAME = 'RENAME';
 
-    public function __construct(private FormFactoryInterface $formFactory, private FormAdjustmentsProviderInterface $formAdjustmentsProvider, private AvailableSkipOptions $availableSkipOptions, private FormModel $formModel)
+    public function __construct(private readonly FormFactoryInterface $formFactory, private readonly FormAdjustmentsProviderInterface $formAdjustmentsProvider, private readonly AvailableSkipOptions $availableSkipOptions, private readonly FormModel $formModel)
     {
     }
 

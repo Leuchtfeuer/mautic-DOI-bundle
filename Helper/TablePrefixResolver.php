@@ -25,7 +25,7 @@ final class TablePrefixResolver
         }
 
         if (defined('MAUTIC_TABLE_PREFIX')) {
-            return (string) MAUTIC_TABLE_PREFIX;
+            return MAUTIC_TABLE_PREFIX;
         }
 
         return '';

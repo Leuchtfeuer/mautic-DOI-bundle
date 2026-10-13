@@ -22,15 +22,15 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FormSubmissionSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private VerificationEmailSender $verificationEmailSender,
-        private Config $pluginConfig,
-        private RuleEvaluator $ruleEvaluator,
-        private DoiConfigManager $doiConfigManager,
-        private FormDoiSubmissionManager $submissionManager,
-        private DoiActionsDispatcher $actionsDispatcher,
-        private DoiHashGenerator $hashGenerator,
-        private DoiVerificationHistoryRecorder $verificationHistoryRecorder,
-        private ConsentSnapshotBuilder $consentSnapshotBuilder,
+        private readonly VerificationEmailSender $verificationEmailSender,
+        private readonly Config $pluginConfig,
+        private readonly RuleEvaluator $ruleEvaluator,
+        private readonly DoiConfigManager $doiConfigManager,
+        private readonly FormDoiSubmissionManager $submissionManager,
+        private readonly DoiActionsDispatcher $actionsDispatcher,
+        private readonly DoiHashGenerator $hashGenerator,
+        private readonly DoiVerificationHistoryRecorder $verificationHistoryRecorder,
+        private readonly ConsentSnapshotBuilder $consentSnapshotBuilder,
     ) {
     }
 

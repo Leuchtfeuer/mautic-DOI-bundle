@@ -13,16 +13,16 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class LastDoiDateFieldInstallerTest extends TestCase
+final class LastDoiDateFieldInstallerTest extends TestCase
 {
     /** @var FieldModel&MockObject */
-    private FieldModel $fieldModel;
+    private MockObject $fieldModel;
 
     /** @var TranslatorInterface&MockObject */
-    private TranslatorInterface $translator;
+    private MockObject $translator;
 
     /** @var LoggerInterface&MockObject */
-    private LoggerInterface $logger;
+    private MockObject $logger;
 
     private LastDoiDateFieldInstaller $installer;
 
@@ -61,12 +61,12 @@ class LastDoiDateFieldInstallerTest extends TestCase
 
         $this->fieldModel->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadField $field): bool {
-                return LastDoiDateField::ALIAS === $field->getAlias()
-                    && 'datetime' === $field->getType()
-                    && 'lead' === $field->getObject()
-                    && 'Last DOI Date' === $field->getLabel()
-                    && $field->getIsListable();
+            ->with($this->callback(function (LeadField $field): void {
+                $this->assertSame(LastDoiDateField::ALIAS, $field->getAlias());
+                $this->assertSame('datetime', $field->getType());
+                $this->assertSame('lead', $field->getObject());
+                $this->assertSame('Last DOI Date', $field->getLabel());
+                $this->assertTrue($field->getIsListable());
             }));
 
         $this->installer->installIfMissing();
@@ -82,7 +82,9 @@ class LastDoiDateFieldInstallerTest extends TestCase
             ->method('error')
             ->with(
                 'Failed to install last_doi_date contact field',
-                $this->callback(static fn (array $context): bool => 'save failed' === $context['error'])
+                $this->callback(function (array $context): void {
+                    $this->assertSame('save failed', $context['error']);
+                })
             );
 
         $this->installer->installIfMissing();

@@ -29,10 +29,7 @@ final class FeatureSettingsType extends AbstractType
                     'class'   => 'form-control',
                 ],
                 'constraints' => [
-                    new GreaterThan([
-                        'value'   => 0,
-                        'message' => 'mautic.plugin.doi.config.followup_wait_time.positive',
-                    ]),
+                    new GreaterThan(value: 0, message: 'mautic.plugin.doi.config.followup_wait_time.positive'),
                 ],
             ]
         );
@@ -47,10 +44,7 @@ final class FeatureSettingsType extends AbstractType
                     'class'   => 'form-control',
                 ],
                 'constraints' => [
-                    new GreaterThan([
-                        'value'   => 0,
-                        'message' => 'mautic.plugin.doi.config.doi_link_timeout.positive',
-                    ]),
+                    new GreaterThan(value: 0, message: 'mautic.plugin.doi.config.doi_link_timeout.positive'),
                 ],
             ]
         );

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Service;
 
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
@@ -11,11 +13,10 @@ use Mautic\LeadBundle\Entity\PointsChangeLog;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mime\Email as MimeEmail;
 
-class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
+final class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -40,6 +41,7 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
         $submission    = $this->submitForm($form, ['mauticform[email]' => 'test@example.com']);
         $doiSubmission = $this->assertDoiSubmissionCreated();
         $contact       = $submission->getLead();
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\Lead::class, $contact);
         $initialPoints = $contact->getPoints();
 
         $this->verifyDoiToken($form, $doiSubmission);
@@ -47,16 +49,16 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
         $this->em->refresh($doiSubmission);
         $this->em->refresh($contact);
 
-        Assert::assertSame('confirmed', $doiSubmission->getStatus());
-        Assert::assertSame($initialPoints + 10, $contact->getPoints());
+        $this->assertSame('confirmed', $doiSubmission->getStatus());
+        $this->assertSame($initialPoints + 10, $contact->getPoints());
 
         $pointsChangeLogs = $this->em->getRepository(PointsChangeLog::class)->findBy(['lead' => $contact]);
-        Assert::assertCount(1, $pointsChangeLogs);
+        $this->assertCount(1, $pointsChangeLogs);
 
         $pointsChangeLog = $pointsChangeLogs[0];
-        Assert::assertSame(10, $pointsChangeLog->getDelta());
-        Assert::assertSame('form', $pointsChangeLog->getType());
-        Assert::assertStringContainsString($form->getName(), $pointsChangeLog->getEventName());
+        $this->assertSame(10, $pointsChangeLog->getDelta());
+        $this->assertSame('form', $pointsChangeLog->getType());
+        $this->assertStringContainsString($form->getName(), $pointsChangeLog->getEventName());
     }
 
     public function testLeadScoreContactsCompaniesActionExecutesAfterDoiVerification(): void
@@ -78,8 +80,8 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
         $this->em->refresh($doiSubmission);
         $this->em->refresh($company);
 
-        Assert::assertSame('confirmed', $doiSubmission->getStatus());
-        Assert::assertSame(35, $company->getScore());
+        $this->assertSame('confirmed', $doiSubmission->getStatus());
+        $this->assertSame(35, $company->getScore());
     }
 
     public function testLeadChangeListActionExecutesAfterDoiVerification(): void
@@ -98,6 +100,7 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
 
         // Add contact to the "remove from" segment initially
         $listLead = new ListLead();
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\Lead::class, $contact);
         $listLead->setLead($contact);
         $listLead->setList($removeFromSegment);
         $listLead->setDateAdded(new \DateTime());
@@ -109,22 +112,22 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
         $this->em->refresh($doiSubmission);
         $this->em->refresh($contact);
 
-        Assert::assertSame('confirmed', $doiSubmission->getStatus());
+        $this->assertSame('confirmed', $doiSubmission->getStatus());
 
         // Check that contact was added to the "add to" segment
         $addToListLeads = $this->em->getRepository(ListLead::class)->findBy([
             'lead' => $contact,
             'list' => $addToSegment,
         ]);
-        Assert::assertCount(1, $addToListLeads);
+        $this->assertCount(1, $addToListLeads);
 
         // Check that contact was removed from the "remove from" segment
         $removeFromListLeads = $this->em->getRepository(ListLead::class)->findBy([
             'lead' => $contact,
             'list' => $removeFromSegment,
         ]);
-        Assert::assertCount(1, $removeFromListLeads);
-        Assert::assertTrue($removeFromListLeads[0]->getManuallyRemoved());
+        $this->assertCount(1, $removeFromListLeads);
+        $this->assertTrue($removeFromListLeads[0]->getManuallyRemoved());
     }
 
     public function testEmailSendLeadActionExecutesAfterDoiVerification(): void
@@ -142,12 +145,12 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
 
         $this->em->refresh($doiSubmission);
 
-        Assert::assertSame('confirmed', $doiSubmission->getStatus());
+        $this->assertSame('confirmed', $doiSubmission->getStatus());
 
         $messages = $this->getMailerMessagesByToAddress('test@example.com');
-        Assert::assertCount(1, $messages);
-        Assert::assertInstanceOf(MimeEmail::class, $messages[0]);
-        Assert::assertStringContainsString('Test Email for Lead', $messages[0]->getSubject());
+        $this->assertCount(1, $messages);
+        $this->assertInstanceOf(MimeEmail::class, $messages[0]);
+        $this->assertStringContainsString('Test Email for Lead', (string) $messages[0]->getSubject());
     }
 
     /**
@@ -165,7 +168,7 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
         $this->assertResponseIsSuccessful();
 
         $submissions = $this->em->getRepository(Submission::class)->findAll();
-        Assert::assertCount(1, $submissions);
+        $this->assertCount(1, $submissions);
 
         return $submissions[0];
     }
@@ -173,9 +176,9 @@ class DoiActionsDispatcherFunctionalTest extends MauticMysqlTestCase
     private function assertDoiSubmissionCreated(): FormDoiSubmission
     {
         $doiSubmissions = $this->em->getRepository(FormDoiSubmission::class)->findAll();
-        Assert::assertCount(1, $doiSubmissions);
+        $this->assertCount(1, $doiSubmissions);
         $doiSubmission = $doiSubmissions[0];
-        Assert::assertSame('pending', $doiSubmission->getStatus());
+        $this->assertSame('pending', $doiSubmission->getStatus());
 
         return $doiSubmission;
     }

@@ -37,7 +37,7 @@ $metadataFactory = new class() implements ClassMetadataFactory {
 };
 
 return new class($metadataFactory) implements ObjectManager {
-    public function __construct(private ClassMetadataFactory $metadataFactory)
+    public function __construct(private readonly ClassMetadataFactory $metadataFactory)
     {
     }
 

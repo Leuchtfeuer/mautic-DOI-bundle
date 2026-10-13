@@ -12,18 +12,17 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryAction;
 use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryMetadata;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiVerificationHistoryRecorder;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-class DoiVerificationHistoryRecorderTest extends TestCase
+final class DoiVerificationHistoryRecorderTest extends TestCase
 {
     /** @var LeadEventLogRepository&MockObject */
-    private LeadEventLogRepository $repository;
+    private MockObject $repository;
 
     /** @var LoggerInterface&MockObject */
-    private LoggerInterface $logger;
+    private MockObject $logger;
 
     private DoiVerificationHistoryRecorder $recorder;
 
@@ -42,14 +41,12 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) {
-                self::assertSame(DoiVerificationHistoryMetadata::BUNDLE, $log->getBundle());
-                self::assertSame(DoiVerificationHistoryMetadata::OBJECT, $log->getObject());
-                self::assertSame('success', $log->getAction());
-                self::assertSame(42, $log->getObjectId());
-
-                return true;
-            }));
+            ->willReturnCallback(function (LeadEventLog $log): void {
+                $this->assertSame(DoiVerificationHistoryMetadata::BUNDLE, $log->getBundle());
+                $this->assertSame(DoiVerificationHistoryMetadata::OBJECT, $log->getObject());
+                $this->assertSame('success', $log->getAction());
+                $this->assertSame(42, $log->getObjectId());
+            });
 
         $this->repository->expects($this->once())->method('detachEntity');
 
@@ -64,11 +61,9 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) {
-                self::assertSame('failure', $log->getAction());
-
-                return true;
-            }));
+            ->willReturnCallback(function (LeadEventLog $log): void {
+                $this->assertSame('failure', $log->getAction());
+            });
 
         $this->repository->expects($this->once())->method('detachEntity');
 
@@ -84,12 +79,10 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) use ($skippedAt) {
-                self::assertSame('skipped', $log->getAction());
-                self::assertEquals($skippedAt, $log->getDateAdded());
-
-                return true;
-            }));
+            ->willReturnCallback(function (LeadEventLog $log) use ($skippedAt): void {
+                $this->assertSame('skipped', $log->getAction());
+                $this->assertEquals($skippedAt, $log->getDateAdded());
+            });
 
         $this->repository->expects($this->once())->method('detachEntity');
 
@@ -106,11 +99,9 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) use ($skippedAt) {
-                self::assertEquals($skippedAt, $log->getDateAdded());
-
-                return true;
-            }));
+            ->willReturnCallback(function (LeadEventLog $log) use ($skippedAt): void {
+                $this->assertEquals($skippedAt, $log->getDateAdded());
+            });
 
         $this->repository->method('detachEntity');
 
@@ -139,11 +130,9 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) use ($confirmedAt) {
-                self::assertEquals($confirmedAt, $log->getDateAdded());
-
-                return true;
-            }));
+            ->willReturnCallback(function (LeadEventLog $log) use ($confirmedAt): void {
+                $this->assertEquals($confirmedAt, $log->getDateAdded());
+            });
 
         $this->repository->method('detachEntity');
 
@@ -160,11 +149,9 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) use ($clickedAt) {
-                self::assertEquals($clickedAt, $log->getDateAdded());
-
-                return true;
-            }));
+            ->willReturnCallback(function (LeadEventLog $log) use ($clickedAt): void {
+                $this->assertEquals($clickedAt, $log->getDateAdded());
+            });
 
         $this->repository->method('detachEntity');
 
@@ -227,9 +214,9 @@ class DoiVerificationHistoryRecorderTest extends TestCase
             ->with(
                 'Failed to record DOI verification history',
                 $this->callback(function (array $context): bool {
-                    Assert::assertSame(1, $context['doiSubmissionId']);
-                    Assert::assertSame('success', $context['action']);
-                    Assert::assertSame('DB error', $context['error']);
+                    $this->assertSame(1, $context['doiSubmissionId']);
+                    $this->assertSame('success', $context['action']);
+                    $this->assertSame('DB error', $context['error']);
 
                     return true;
                 })
@@ -250,14 +237,12 @@ class DoiVerificationHistoryRecorderTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadEventLog $log) {
+            ->willReturnCallback(function (LeadEventLog $log): void {
                 $props = $log->getProperties();
-                self::assertSame('My DOI Form', $props['object_description']);
-                self::assertSame(99, $props['form_id']);
-                self::assertSame(3, $props['doi_submission_id']);
-
-                return true;
-            }));
+                $this->assertSame('My DOI Form', $props['object_description']);
+                $this->assertSame(99, $props['form_id']);
+                $this->assertSame(3, $props['doi_submission_id']);
+            });
 
         $this->repository->method('detachEntity');
 

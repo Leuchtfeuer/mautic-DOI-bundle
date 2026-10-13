@@ -12,10 +12,10 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Helper\TablePrefixResolver;
 use MauticPlugin\LeuchtfeuerDoiBundle\LeuchtfeuerDoiBundle;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final class PluginInstallSubscriber implements EventSubscriberInterface
+final readonly class PluginInstallSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private EntityManagerInterface $em,
     ) {
     }
 

@@ -125,7 +125,7 @@ class DoiActionController extends AbstractStandardFormController
         $formId     = Request::METHOD_POST === $method ? ($formaction['formId'] ?? '') : $request->query->get('formId');
         $actions    = $formDoiActionSessionManager->getActionsFromSession($formId);
         $valid      = $cancelled      = false;
-        $formAction = array_key_exists($objectId, $actions) ? $actions[$objectId] : null;
+        $formAction = $actions[$objectId] ?? null;
         $keyId      = null;
 
         if (null === $formAction) {
@@ -238,7 +238,7 @@ class DoiActionController extends AbstractStandardFormController
             throw new AccessDeniedHttpException($this->translator->trans('mautic.core.url.error.401', ['%url%' => $request->getRequestUri()]));
         }
 
-        $formAction = (array_key_exists($objectId, $actions)) ? $actions[$objectId] : null;
+        $formAction = $actions[$objectId] ?? null;
         if (Request::METHOD_POST === $request->getMethod() && null !== $formAction) {
             // Remove the action from the session
             $formDoiActionSessionManager->removeActionFromSession($formId, $objectId);

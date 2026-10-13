@@ -15,8 +15,8 @@ final class ResolveConsentSnapshotEvent extends Event
      */
     public function __construct(
         private array $snapshot,
-        private Form $form,
-        private Request $request,
+        private readonly Form $form,
+        private readonly Request $request,
     ) {
     }
 

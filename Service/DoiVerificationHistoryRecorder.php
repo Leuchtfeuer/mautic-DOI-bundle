@@ -11,7 +11,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryAction;
 use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryMetadata;
 use Psr\Log\LoggerInterface;
 
-final class DoiVerificationHistoryRecorder
+final readonly class DoiVerificationHistoryRecorder
 {
     public function __construct(
         private LeadEventLogRepository $leadEventLogRepository,

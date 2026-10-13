@@ -9,7 +9,7 @@ use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\LeuchtfeuerDoiBundle\Integration\Config;
 
-final class PluginFixtureHelper
+final readonly class PluginFixtureHelper
 {
     private const PLUGIN_BUNDLE     = 'LeuchtfeuerDoiBundle';
     private const INTEGRATION_NAME  = 'LeuchtfeuerDoi';

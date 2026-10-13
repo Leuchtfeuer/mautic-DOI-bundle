@@ -15,12 +15,11 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiActionExecutionLogRepository
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\DomCrawler\Form;
 use Symfony\Component\HttpFoundation\Request;
 
-class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
+final class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -58,15 +57,13 @@ class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
         // 2. Preparation: Create Contact & Company context
         $contact = new Lead();
         $contact->setEmail($formData['email']);
-        if (!empty($leadData)) {
-            foreach ($leadData as $field => $value) {
-                $this->setEntityValue($contact, $field, $value);
-            }
+        foreach ($leadData as $field => $value) {
+            $this->setEntityValue($contact, $field, $value);
         }
         $this->em->persist($contact);
         $this->em->flush();
 
-        if (!empty($companyData)) {
+        if ([] !== $companyData) {
             // Use helper if available or manual creation if helper doesn't support arbitrary fields easily
             // The provided helper createFormWithCompanyViaApi implies company support exists,
             // but createCompany method wasn't explicitly in the snippet, creating manually based on context logic
@@ -140,8 +137,8 @@ class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
         // 7. Verify Submission and Retrieve DOI details
         /** @var FormDoiSubmission|null $doiSubmission */
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->findOneBy(['email' => $formData['email']]);
-        Assert::assertNotNull($doiSubmission, 'DOI Submission should have been created.');
-        Assert::assertSame('pending', $doiSubmission->getStatus());
+        $this->assertInstanceOf(FormDoiSubmission::class, $doiSubmission, 'DOI Submission should have been created.');
+        $this->assertSame('pending', $doiSubmission->getStatus());
 
         // 8. Trigger DOI Confirmation (Click the link)
         $formId    = $form->getId();
@@ -161,9 +158,9 @@ class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
         $isInSegment = isset($leadLists[$segment->getId()]);
 
         if ($shouldExecute) {
-            Assert::assertTrue($isInSegment, 'The DOI Action should have executed, but the contact is NOT in the segment.');
+            $this->assertTrue($isInSegment, 'The DOI Action should have executed, but the contact is NOT in the segment.');
         } else {
-            Assert::assertFalse($isInSegment, 'The DOI Action should have been SKIPPED due to conditions, but the contact IS in the segment.');
+            $this->assertFalse($isInSegment, 'The DOI Action should have been SKIPPED due to conditions, but the contact IS in the segment.');
         }
 
         // 10. Check Logs
@@ -211,7 +208,7 @@ class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
 
         // Find the most recent submission for this form
         $submission = $submissionRepo->findOneBy(['form' => $formId], ['dateSubmitted' => 'DESC']);
-        Assert::assertNotNull($submission, 'No submission found for log verification.');
+        $this->assertInstanceOf(Submission::class, $submission, 'No submission found for log verification.');
 
         /** @var FormDoiActionExecutionLogRepository $logRepo */
         $logRepo = $this->em->getRepository(FormDoiActionExecutionLog::class);
@@ -222,22 +219,18 @@ class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
             'action'     => $actionId,
         ]);
 
-        Assert::assertNotNull($log, 'No execution log found for this action/submission combination.');
+        $this->assertInstanceOf(FormDoiActionExecutionLog::class, $log, 'No execution log found for this action/submission combination.');
 
-        Assert::assertEquals(
-            $expectedExecutionStatus,
-            $log->isExecuted(),
-            sprintf('Log status mismatch. Expected isExecuted: %s, but got: %s',
-                $expectedExecutionStatus ? 'true' : 'false',
-                $log->isExecuted() ? 'true' : 'false'
-            )
-        );
+        $this->assertEquals($expectedExecutionStatus, $log->isExecuted(), sprintf('Log status mismatch. Expected isExecuted: %s, but got: %s',
+            $expectedExecutionStatus ? 'true' : 'false',
+            $log->isExecuted() ? 'true' : 'false'
+        ));
 
         $expectedDetails = $expectedExecutionStatus
             ? FormDoiActionExecutionLog::DETAILS_CONDITIONS_MET
             : FormDoiActionExecutionLog::DETAILS_CONDITIONS_NOT_MET;
 
-        Assert::assertEquals($expectedDetails, $log->getLogDetails(), 'Log detail message is incorrect.');
+        $this->assertEquals($expectedDetails, $log->getLogDetails(), 'Log detail message is incorrect.');
     }
 
     public static function conditionsDataProvider(): \Generator

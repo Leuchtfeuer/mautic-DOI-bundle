@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Helper;
+namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Unit\Helper;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\MigrationHelper;
 use PHPUnit\Framework\TestCase;
 
-class MigrationHelperTest extends TestCase
+final class MigrationHelperTest extends TestCase
 {
     public function testRequireTableReturnsExistingTable(): void
     {

@@ -24,12 +24,12 @@ class FormBuilderSubscriber implements EventSubscriberInterface
     private const DOI_ACTION_CONDITIONS_CONFIG_KEY = 'doiActionConditionsConfig';
 
     public function __construct(
-        private FormDoiActionManager $formDoiActionManager,
-        private FormDoiActionSessionManager $formDoiActionSessionManager,
-        private DoiConfigManager $doiConfigManager,
-        private DoiActionConditionManager $doiActionConditionManager,
-        private RequestStack $requestStack,
-        private Config $pluginConfig,
+        private readonly FormDoiActionManager $formDoiActionManager,
+        private readonly FormDoiActionSessionManager $formDoiActionSessionManager,
+        private readonly DoiConfigManager $doiConfigManager,
+        private readonly DoiActionConditionManager $doiActionConditionManager,
+        private readonly RequestStack $requestStack,
+        private readonly Config $pluginConfig,
     ) {
     }
 

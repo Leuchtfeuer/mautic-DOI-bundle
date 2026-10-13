@@ -23,13 +23,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class FormTypeExtension extends AbstractTypeExtension
 {
     public function __construct(
-        private DoiConfigManager $doiConfigManager,
-        private Config $pluginConfig,
-        private RequestStack $requestStack,
-        private DoiActionConditionManager $doiActionConditionManager,
-        private FormDoiActionManager $formDoiActionManager,
-        private FormDoiActionSessionManager $formDoiActionSessionManager,
-        private FormModel $formModel,
+        private readonly DoiConfigManager $doiConfigManager,
+        private readonly Config $pluginConfig,
+        private readonly RequestStack $requestStack,
+        private readonly DoiActionConditionManager $doiActionConditionManager,
+        private readonly FormDoiActionManager $formDoiActionManager,
+        private readonly FormDoiActionSessionManager $formDoiActionSessionManager,
+        private readonly FormModel $formModel,
     ) {
     }
 
@@ -39,7 +39,7 @@ class FormTypeExtension extends AbstractTypeExtension
             return;
         }
 
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, [$this, 'onPreSetData']);
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, $this->onPreSetData(...));
     }
 
     public function onPreSetData(FormEvent $event): void

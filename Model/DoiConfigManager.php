@@ -14,9 +14,9 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Helper\ConditionFilterHelper;
 class DoiConfigManager
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private FormDoiConfigRepository $repository,
-        private EmailRepository $emailRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly FormDoiConfigRepository $repository,
+        private readonly EmailRepository $emailRepository,
     ) {
     }
 

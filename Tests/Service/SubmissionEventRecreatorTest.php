@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Service;
 
 use Mautic\FormBundle\Entity\Field;
@@ -7,7 +9,7 @@ use Mautic\FormBundle\Entity\Form;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\SubmissionEventRecreator;
 use PHPUnit\Framework\TestCase;
 
-class SubmissionEventRecreatorTest extends TestCase
+final class SubmissionEventRecreatorTest extends TestCase
 {
     /**
      * @param array<string, mixed> $results

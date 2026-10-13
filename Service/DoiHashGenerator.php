@@ -6,7 +6,7 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Service;
 
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 
-final class DoiHashGenerator
+final readonly class DoiHashGenerator
 {
     public function __construct(private CoreParametersHelper $coreParametersHelper)
     {

@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManager;
 use MauticPlugin\LeuchtfeuerDoiBundle\Migrations\Version_0_0_1;
 use PHPUnit\Framework\TestCase;
 
-class Version001PrefixTest extends TestCase
+final class Version001PrefixTest extends TestCase
 {
     public function testUpUsesPrefixedFormsTableInForeignKey(): void
     {
@@ -29,7 +29,7 @@ class Version001PrefixTest extends TestCase
         $connection->method('createSchemaManager')->willReturn($schemaManager);
         $connection->expects($this->exactly(2))
             ->method('prepare')
-            ->willReturnCallback(function (string $sql) use (&$executedSql) {
+            ->willReturnCallback(function (string $sql) use (&$executedSql): \PHPUnit\Framework\MockObject\MockObject {
                 $executedSql[] = $sql;
 
                 $statement = $this->createMock(\Doctrine\DBAL\Statement::class);
@@ -47,10 +47,8 @@ class Version001PrefixTest extends TestCase
         $migration->execute();
 
         $this->assertCount(2, $executedSql);
-        $createSql = $executedSql[0] ?? '';
-        $alterSql  = $executedSql[1] ?? '';
-        $this->assertNotSame('', $createSql);
-        $this->assertNotSame('', $alterSql);
+        $createSql = $executedSql[0];
+        $alterSql  = $executedSql[1];
         $this->assertStringContainsString('CREATE TABLE `'.$prefix.'form_doi_actions`', $createSql);
         $this->assertStringContainsString('REFERENCES `'.$prefix.'forms`', $alterSql);
         $this->assertStringNotContainsString('REFERENCES forms ', $alterSql);
