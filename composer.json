@@ -49,7 +49,7 @@
   "scripts": {
     "fixcs": "../../bin/php-cs-fixer fix . --config ../../.php-cs-fixer.php --show-progress dots -v",
     "rector": "cd ../.. && bin/rector process --ansi --config rector.php plugins/LeuchtfeuerDoiBundle",
-    "phpstan": "../../bin/phpstan analyse . --memory-limit=1G -c phpstan.neon",
+    "phpstan": "cd ../.. && bash -c '[ ! -f var/cache/test/AppKernelTestDebugContainer.xml ] && APP_ENV=test APP_DEBUG=1 bin/console >/dev/null 2>&1; php -d memory_limit=4G bin/phpstan analyse plugins/LeuchtfeuerDoiBundle --ansi'",
     "clear-test-cache": "cd ../.. && php bin/console cache:clear --env=test --no-warmup",
     "phpunit": [
       "@unit",

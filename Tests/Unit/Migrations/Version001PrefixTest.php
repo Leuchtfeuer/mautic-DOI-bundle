@@ -47,10 +47,14 @@ class Version001PrefixTest extends TestCase
         $migration->execute();
 
         $this->assertCount(2, $executedSql);
-        $this->assertStringContainsString('CREATE TABLE `'.$prefix.'form_doi_actions`', $executedSql[0]);
-        $this->assertStringContainsString('REFERENCES `'.$prefix.'forms`', $executedSql[1]);
-        $this->assertStringNotContainsString('REFERENCES forms ', $executedSql[1]);
-        $this->assertStringNotContainsString('REFERENCES `forms`', $executedSql[1]);
+        $createSql = $executedSql[0] ?? '';
+        $alterSql  = $executedSql[1] ?? '';
+        $this->assertNotSame('', $createSql);
+        $this->assertNotSame('', $alterSql);
+        $this->assertStringContainsString('CREATE TABLE `'.$prefix.'form_doi_actions`', $createSql);
+        $this->assertStringContainsString('REFERENCES `'.$prefix.'forms`', $alterSql);
+        $this->assertStringNotContainsString('REFERENCES forms ', $alterSql);
+        $this->assertStringNotContainsString('REFERENCES `forms`', $alterSql);
     }
 
     public function testIsApplicableWhenPrefixedTableAlreadyExists(): void
