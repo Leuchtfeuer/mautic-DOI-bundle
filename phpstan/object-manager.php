@@ -2,16 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Stub ObjectManager for phpstan-doctrine when analysing this plugin in isolation.
- *
- * Root vendor auto-includes phpstan-doctrine. Without an OM loader it falls back to a
- * ClassMetadataFactory with a null EM and asserts on Attribute entities (GeneratedValue).
- * A real EM is unnecessary for plugin-level analysis — returning "transient" skips that path.
- *
- * Stubs of entity classes alone do not help; the extension still builds ORM metadata.
- */
-
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\Mapping\MappingException;
@@ -20,7 +10,7 @@ use Doctrine\Persistence\ObjectRepository;
 
 require_once dirname(__DIR__, 3).'/vendor/autoload.php';
 
-$metadataFactory = new class implements ClassMetadataFactory {
+$metadataFactory = new class() implements ClassMetadataFactory {
     public function getAllMetadata(): array
     {
         return [];
