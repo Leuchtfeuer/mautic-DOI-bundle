@@ -11,32 +11,44 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Integration\Config;
 
 final class PluginFixtureHelper
 {
+    private const PLUGIN_BUNDLE     = 'LeuchtfeuerDoiBundle';
+    private const INTEGRATION_NAME  = 'LeuchtfeuerDoi';
+
     public function __construct(private EntityManagerInterface $em)
     {
     }
 
     public function createAndEnablePlugin(): void
     {
-        $plugin = new Plugin();
-        $plugin->setName('DOI by Leuchtfeuer');
-        $plugin->setBundle('LeuchtfeuerDoiBundle');
-        $this->em->persist($plugin);
+        $plugin = $this->em->getRepository(Plugin::class)->findOneBy(['bundle' => self::PLUGIN_BUNDLE]);
+        if (!$plugin instanceof Plugin) {
+            $plugin = new Plugin();
+            $plugin->setName('DOI by Leuchtfeuer');
+            $plugin->setBundle(self::PLUGIN_BUNDLE);
+            $this->em->persist($plugin);
+        }
 
-        $integration = new Integration();
+        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => self::INTEGRATION_NAME]);
+        if (!$integration instanceof Integration) {
+            $integration = new Integration();
+            $integration->setPlugin($plugin);
+            $integration->setName(self::INTEGRATION_NAME);
+            $this->em->persist($integration);
+        }
+
         $integration->setPlugin($plugin);
         $integration->setIsPublished(true);
-        $integration->setName('LeuchtfeuerDoi');
         $integration->setFeatureSettings(['integration' => [
             'followup_wait_time' => Config::DEFAULT_FOLLOWUP_WAIT_TIME,
             'doi_link_timeout'   => Config::DEFAULT_DOI_LINK_TIMEOUT,
         ]]);
-        $this->em->persist($integration);
+
         $this->em->flush();
     }
 
     public function disablePlugin(): void
     {
-        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerDoi']);
+        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => self::INTEGRATION_NAME]);
         if (null === $integration) {
             return;
         }
@@ -48,7 +60,7 @@ final class PluginFixtureHelper
 
     public function modifyFollowupWaitTime(int $waitTime): void
     {
-        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerDoi']);
+        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => self::INTEGRATION_NAME]);
         if (null === $integration) {
             return;
         }
@@ -63,7 +75,7 @@ final class PluginFixtureHelper
 
     public function modifyDoiLinkTimeout(int $timeout): void
     {
-        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerDoi']);
+        $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => self::INTEGRATION_NAME]);
         if (null === $integration) {
             return;
         }

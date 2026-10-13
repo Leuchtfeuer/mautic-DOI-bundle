@@ -8,7 +8,6 @@ jobs:
     name: CI
     uses: Leuchtfeuer/mautic-ci-runner/.github/workflows/complete-ci.yaml@main
     with:
-      mauticVersion: 5
       skipCodeReview: true
     secrets:
       PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}

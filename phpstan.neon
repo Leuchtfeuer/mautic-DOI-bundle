@@ -1,0 +1,38 @@
+# Same shape as other LF plugins (e.g. Dynamic Sender).
+# doctrine.objectManagerLoader is required because root vendor auto-loads
+# phpstan-doctrine and Attribute entities otherwise assert on a null EM.
+# The loader is a tiny stub OM under phpstan/ (not a real EntityManager).
+
+parameters:
+    level: 6
+    tmpDir: .phpstan-cache
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false
+
+    parallel:
+        maximumNumberOfProcesses: 4
+        processTimeout: 1000.0
+
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+
+    paths:
+        - .
+
+    excludePaths:
+        - vendor
+        - var
+        - Tests
+        - phpstan
+        - phpstan-bootstrap.php
+        - plugins/LeuchtfeuerDoiBundle/Tests
+        - plugins/LeuchtfeuerDoiBundle/phpstan
+
+    doctrine:
+        objectManagerLoader: phpstan/object-manager.php
+        allowNullablePropertyForRequiredField: true
+
+    dynamicConstantNames:
+        - MAUTIC_ENV
+        - MAUTIC_TABLE_PREFIX
+        - MAUTIC_VERSION
