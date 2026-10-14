@@ -132,7 +132,7 @@ class PublicController extends AbstractController
             ->withPath('/')
             ->withSecure($request->isSecure())
             ->withHttpOnly()
-            ->withSameSite(\Symfony\Component\HttpFoundation\Cookie::SAMESITE_LAX);
+            ->withSameSite($this->cookieSameSite());
 
         if ($config && $config->getSuccessRedirectUrl()) {
             $response = new RedirectResponse($config->getSuccessRedirectUrl());
@@ -161,9 +161,18 @@ class PublicController extends AbstractController
 
     private function isSubmissionExpired(FormDoiSubmission $submission): bool
     {
-        $timeoutHours    = $this->config->getDoiLinkTimeout();
-        $expirationTime  = (clone $submission->getDateCreated())->modify("+{$timeoutHours} hours");
+        $timeoutHours   = $this->config->getDoiLinkTimeout();
+        $expirationTime = (clone $submission->getDateCreated())->modify("+{$timeoutHours} hours");
 
         return new \DateTime() > $expirationTime;
+    }
+
+    /**
+     * Indirection keeps Rector's ReplaceArgumentDefaultValueRector from rewriting
+     * withSameSite() to a FQCN constant that php-cs-fixer would shorten again.
+     */
+    private function cookieSameSite(): string
+    {
+        return Cookie::SAMESITE_LAX;
     }
 }
