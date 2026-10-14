@@ -61,12 +61,14 @@ final class LastDoiDateFieldInstallerTest extends TestCase
 
         $this->fieldModel->expects($this->once())
             ->method('saveEntity')
-            ->with($this->callback(function (LeadField $field): void {
+            ->with($this->callback(function (LeadField $field): bool {
                 $this->assertSame(LastDoiDateField::ALIAS, $field->getAlias());
                 $this->assertSame('datetime', $field->getType());
                 $this->assertSame('lead', $field->getObject());
                 $this->assertSame('Last DOI Date', $field->getLabel());
                 $this->assertTrue($field->getIsListable());
+
+                return true;
             }));
 
         $this->installer->installIfMissing();
@@ -82,8 +84,10 @@ final class LastDoiDateFieldInstallerTest extends TestCase
             ->method('error')
             ->with(
                 'Failed to install last_doi_date contact field',
-                $this->callback(function (array $context): void {
+                $this->callback(function (array $context): bool {
                     $this->assertSame('save failed', $context['error']);
+
+                    return true;
                 })
             );
 

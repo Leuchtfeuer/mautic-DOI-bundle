@@ -12,6 +12,9 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Validator\Constraints\GreaterThan;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 final class FeatureSettingsType extends AbstractType
 {
     /**

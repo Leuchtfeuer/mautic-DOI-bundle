@@ -22,7 +22,7 @@ class ConditionBuilderController extends AbstractController
 
     public function renderSkipConditionAction(Request $request): JsonResponse
     {
-        $filterNum = (int) $request->get('filterNum');
+        $filterNum = (int) $request->query->get('filterNum');
 
         // Define the specific HTML ID/Name patterns for this action
         $newId   = "id=\"mauticform_doiConfig_skipConditions_{$filterNum}_properties";
@@ -33,8 +33,8 @@ class ConditionBuilderController extends AbstractController
 
     public function renderDoiActionConditionAction(Request $request): JsonResponse
     {
-        $actionId     = InputHelper::clean($request->get('actionId'));
-        $conditionNum = (int) $request->get('conditionNum');
+        $actionId     = InputHelper::clean((string) $request->query->get('actionId'));
+        $conditionNum = (int) $request->query->get('conditionNum');
 
         // Define the specific HTML ID/Name patterns for this action
         $newId   = "id=\"mauticform_doiActionConditionsConfig_actionConditions_{$actionId}_conditions_{$conditionNum}_properties";
@@ -51,11 +51,11 @@ class ConditionBuilderController extends AbstractController
         string $targetIdString,
         string $targetNameString,
     ): JsonResponse {
-        $fieldAlias  = InputHelper::clean($request->get('fieldAlias'));
-        $fieldObject = InputHelper::clean($request->get('fieldObject'));
-        $operator    = InputHelper::clean($request->get('operator'));
-        $search      = InputHelper::clean($request->get('search'));
-        $formId      = InputHelper::clean($request->get('formId'));
+        $fieldAlias  = InputHelper::clean((string) $request->query->get('fieldAlias'));
+        $fieldObject = InputHelper::clean((string) $request->query->get('fieldObject'));
+        $operator    = InputHelper::clean((string) $request->query->get('operator'));
+        $search      = InputHelper::clean((string) $request->query->get('search'));
+        $formId      = InputHelper::clean((string) $request->query->get('formId'));
 
         $formEntity = $this->formModel->getEntity($formId);
         $form       = $this->formFactory->createNamed(self::TMP_NAME, FilterPropertiesType::class);

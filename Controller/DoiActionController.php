@@ -269,6 +269,7 @@ class DoiActionController extends AbstractStandardFormController
     }
 
     /**
+     * @param FormInterface<mixed> $form
      * @param array<string, mixed> $formAction
      *
      * @return array<string, mixed>

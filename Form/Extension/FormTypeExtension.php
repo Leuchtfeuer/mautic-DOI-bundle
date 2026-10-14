@@ -58,6 +58,9 @@ class FormTypeExtension extends AbstractTypeExtension
         $this->addDoiActionConditions($form, $entity, $clonedActions ?? []);
     }
 
+    /**
+     * @param FormInterface<Form|null> $form
+     */
     private function addDoiConfig(FormInterface $form, Form $entity): void
     {
         if ($entity->getId()) {
@@ -100,6 +103,7 @@ class FormTypeExtension extends AbstractTypeExtension
     }
 
     /**
+     * @param FormInterface<Form|null>         $symfonyForm
      * @param array<int, array<string, mixed>> $clonedActions
      */
     private function addDoiActionConditions(FormInterface $symfonyForm, Form $mauticForm, array $clonedActions): void
@@ -148,6 +152,8 @@ class FormTypeExtension extends AbstractTypeExtension
     }
 
     /**
+     * @param FormInterface<Form|null> $symfonyForm
+     *
      * @return array<int, array<string, mixed>>
      */
     private function handleFormClone(FormInterface $symfonyForm): array

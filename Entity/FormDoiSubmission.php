@@ -87,6 +87,13 @@ class FormDoiSubmission
         return $this->id;
     }
 
+    public function setId(?int $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function setFormSubmission(Submission $formSubmission): self
     {
         $this->formSubmission = $formSubmission;

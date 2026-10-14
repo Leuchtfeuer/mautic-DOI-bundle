@@ -221,7 +221,7 @@ final class DoiActionsEvaluationFunctionalTest extends MauticMysqlTestCase
 
         $this->assertInstanceOf(FormDoiActionExecutionLog::class, $log, 'No execution log found for this action/submission combination.');
 
-        $this->assertEquals($expectedExecutionStatus, $log->isExecuted(), sprintf('Log status mismatch. Expected isExecuted: %s, but got: %s',
+        $this->assertSame($expectedExecutionStatus, $log->isExecuted(), sprintf('Log status mismatch. Expected isExecuted: %s, but got: %s',
             $expectedExecutionStatus ? 'true' : 'false',
             $log->isExecuted() ? 'true' : 'false'
         ));

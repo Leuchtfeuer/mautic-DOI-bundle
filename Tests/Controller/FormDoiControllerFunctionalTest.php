@@ -607,6 +607,7 @@ final class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $actionForm->setValues([
             'formaction[properties][subject]' => 'Test email subject',
             'formaction[properties][message]' => 'Test email message',
+            'formaction[properties][to]'      => 'doi-test@example.com',
             'formaction[name]'                => 'Test DOI Email Action',
             'formaction[description]'         => 'Test action description',
             'formaction[type]'                => 'form.email',
@@ -614,6 +615,10 @@ final class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         ]);
         $this->client->submit($actionForm, [], $this->createAjaxHeaders());
         $this->assertResponseIsSuccessful();
+
+        $payload = json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($payload, 'DOI action submit must return JSON');
+        $this->assertSame(1, $payload['closeModal'] ?? null, 'Action form was not accepted');
     }
 
     private function submitEditDoiActionForm(string $sessionId, int $doiActionId): void
@@ -637,6 +642,7 @@ final class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $actionForm->setValues([
             'formaction[properties][subject]' => 'Updated email subject',
             'formaction[properties][message]' => 'Updated email message',
+            'formaction[properties][to]'      => 'doi-test@example.com',
             'formaction[name]'                => 'Updated DOI Email Action',
             'formaction[description]'         => 'Updated action description',
             'formaction[type]'                => 'form.email',
@@ -644,6 +650,10 @@ final class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         ]);
         $this->client->submit($actionForm, [], $this->createAjaxHeaders());
         $this->assertResponseIsSuccessful();
+
+        $payload = json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($payload, 'DOI action edit submit must return JSON');
+        $this->assertSame(1, $payload['closeModal'] ?? null, 'Action edit form was not accepted');
     }
 
     private function assertDoiActionNotInSession(string $sessionId): void
@@ -664,8 +674,10 @@ final class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
     private function getDoiActionsFromSession(string $sessionId): array
     {
         $sessionKey = 'mautic.form.'.$sessionId.'.actions.doi_verified';
+        $session    = $this->client->getSession();
+        $this->assertInstanceOf(\Symfony\Component\HttpFoundation\Session\SessionInterface::class, $session, 'KernelBrowser session must be available');
 
-        return $this->client->getRequest()->getSession()->get($sessionKey, []);
+        return $session->get($sessionKey, []);
     }
 
     private function createEmail(string $name): Email

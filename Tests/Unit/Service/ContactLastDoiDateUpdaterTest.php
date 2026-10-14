@@ -93,10 +93,12 @@ final class ContactLastDoiDateUpdaterTest extends TestCase
             ->method('error')
             ->with(
                 'Failed to update last_doi_date contact field',
-                $this->callback(function (array $context): void {
+                $this->callback(function (array $context): bool {
                     $this->assertSame(7, $context['leadId']);
                     $this->assertSame(99, $context['doiSubmissionId']);
                     $this->assertSame('update failed', $context['error']);
+
+                    return true;
                 })
             );
 
