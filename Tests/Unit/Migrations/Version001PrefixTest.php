@@ -23,6 +23,7 @@ class Version001PrefixTest extends TestCase
         $schemaManager = $this->createMock(AbstractSchemaManager::class);
         $schemaManager->method('introspectSchema')->willReturn($schema);
 
+        /** @var list<string> $executedSql */
         $executedSql = [];
 
         $connection = $this->createMock(Connection::class);
@@ -47,10 +48,9 @@ class Version001PrefixTest extends TestCase
         $migration->execute();
 
         $this->assertCount(2, $executedSql);
-        $createSql = $executedSql[0] ?? '';
-        $alterSql  = $executedSql[1] ?? '';
-        $this->assertNotSame('', $createSql);
-        $this->assertNotSame('', $alterSql);
+        \assert(isset($executedSql[0], $executedSql[1]));
+        $createSql = $executedSql[0];
+        $alterSql  = $executedSql[1];
         $this->assertStringContainsString('CREATE TABLE `'.$prefix.'form_doi_actions`', $createSql);
         $this->assertStringContainsString('REFERENCES `'.$prefix.'forms`', $alterSql);
         $this->assertStringNotContainsString('REFERENCES forms ', $alterSql);
