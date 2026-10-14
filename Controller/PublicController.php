@@ -132,7 +132,7 @@ class PublicController extends AbstractController
             ->withPath('/')
             ->withSecure($request->isSecure())
             ->withHttpOnly()
-            ->withSameSite(Cookie::SAMESITE_LAX);
+            ->withSameSite(\Symfony\Component\HttpFoundation\Cookie::SAMESITE_LAX);
 
         if ($config && $config->getSuccessRedirectUrl()) {
             $response = new RedirectResponse($config->getSuccessRedirectUrl());
