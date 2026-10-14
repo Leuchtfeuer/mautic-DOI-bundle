@@ -1,11 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!-- http://www.phpunit.de/manual/current/en/appendixes.configuration.html -->
+<!--
+  Single PHPUnit config for local (from plugin dir or Mautic root) and CI.
+  Requires this bundle under plugins/ in a Mautic checkout.
+  Coverage filter must use <source> (PHPUnit 10+/11); <coverage><include> is ignored.
+  Align require-dev phpunit with Mautic core (^11.5).
+-->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd" backupGlobals="false"
-         backupStaticAttributes="false" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true" failOnRisky="true" failOnWarning="true" processIsolation="false"
-         stopOnFailure="false">
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         backupGlobals="false"
+         backupStaticProperties="false"
+         processIsolation="false"
+         stopOnFailure="false"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         failOnNotice="true"
+         beStrictAboutChangesToGlobalState="false">
 
     <testsuites>
         <testsuite name="unit">
@@ -21,32 +36,35 @@
     <php>
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
         <env name="MAXMIND_LICENSE_KEY" value=""/>
-        <env name="KERNEL_CLASS" value="AppKernel" />
+        <env name="KERNEL_CLASS" value="AppTestKernel" force="true"/>
+        <env name="APP_ENV" value="test" force="true"/>
+        <env name="APP_DEBUG" value="0" force="true"/>
         <const name="IS_PHPUNIT" value="true"/>
         <const name="MAUTIC_ENV" value="test"/>
         <server name="KERNEL_DIR" value="app"/>
         <server name="APP_DEBUG" value="0"/>
-        <server name="APP_ENV" value="test" force="true" />
-        <ini name="error_reporting" value="E_ALL" />
+        <server name="APP_ENV" value="test" force="true"/>
+        <ini name="error_reporting" value="E_ALL"/>
+        <ini name="date.timezone" value="UTC"/>
     </php>
 
-    <coverage>
+    <source>
         <include>
-            <directory>*</directory>
+            <directory>.</directory>
         </include>
         <exclude>
             <directory>Assets</directory>
             <directory>Config</directory>
             <directory>Tests</directory>
             <directory>Translations</directory>
-            <directory>Views</directory>
+            <directory>Resources</directory>
             <directory>vendor</directory>
+            <directory>node_modules</directory>
+            <directory>e2e</directory>
         </exclude>
-    </coverage>
+    </source>
 
-    <listeners>
-        <listener class="\Symfony\Bridge\PhpUnit\SymfonyTestsListener"/>
-        <listener class="\Mautic\CoreBundle\Test\Listeners\CleanupListener"/>
-    </listeners>
-
+    <extensions>
+        <bootstrap class="\Mautic\CoreBundle\Test\Extensions\DbPrefix\DbPrefix"/>
+    </extensions>
 </phpunit>
