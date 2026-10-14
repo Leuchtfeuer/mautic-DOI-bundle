@@ -7,8 +7,10 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle;
 use Doctrine\DBAL\Schema\Schema;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\IntegrationsBundle\Bundle\AbstractPluginBundle;
+use Mautic\IntegrationsBundle\Migration\Engine;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\PluginBundle\Entity\Plugin;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\TablePrefixResolver;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\LastDoiDateFieldInstaller;
 
 class LeuchtfeuerDoiBundle extends AbstractPluginBundle
@@ -27,7 +29,16 @@ class LeuchtfeuerDoiBundle extends AbstractPluginBundle
      */
     public static function onPluginUpdate(Plugin $plugin, MauticFactory $factory, $metadata = null, ?Schema $installedSchema = null): void
     {
-        parent::onPluginUpdate($plugin, $factory, $metadata, $installedSchema);
+        $entityManager = $factory->getEntityManager();
+        $tablePrefix   = TablePrefixResolver::resolve($entityManager);
+
+        $migrationEngine = new Engine(
+            $entityManager,
+            $tablePrefix,
+            __DIR__,
+            $plugin->getBundle()
+        );
+        $migrationEngine->up();
 
         $fieldModel = $factory->getModel('lead.field');
         \assert($fieldModel instanceof FieldModel);

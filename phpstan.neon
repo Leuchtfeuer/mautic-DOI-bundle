@@ -1,0 +1,29 @@
+# Merged into the Mautic-root phpstan.neon by mautic-ci-runner — all paths are
+# root-relative. Local `composer phpstan` uses the root config (same as CI).
+
+parameters:
+    level: 6
+    tmpDir: .phpstan-cache
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false
+
+    parallel:
+        maximumNumberOfProcesses: 4
+        processTimeout: 1000.0
+
+    bootstrapFiles:
+        - plugins/LeuchtfeuerDoiBundle/phpstan-bootstrap.php
+
+    excludePaths:
+        - plugins/LeuchtfeuerDoiBundle/Tests
+        - plugins/LeuchtfeuerDoiBundle/phpstan
+        - plugins/LeuchtfeuerDoiBundle/phpstan-bootstrap.php
+
+    doctrine:
+        objectManagerLoader: plugins/LeuchtfeuerDoiBundle/phpstan/object-manager.php
+        allowNullablePropertyForRequiredField: true
+
+    dynamicConstantNames:
+        - MAUTIC_ENV
+        - MAUTIC_TABLE_PREFIX
+        - MAUTIC_VERSION
