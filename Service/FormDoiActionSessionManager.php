@@ -10,7 +10,7 @@ class FormDoiActionSessionManager
 
     private const SESSION_KEY_SUFFIX = '.actions.doi_verified';
 
-    public function __construct(private RequestStack $requestStack)
+    public function __construct(private readonly RequestStack $requestStack)
     {
     }
 

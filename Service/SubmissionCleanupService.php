@@ -32,12 +32,12 @@ class SubmissionCleanupService
     private array $tableExistsCache = [];
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private FormDoiConfigRepository $configRepository,
-        private FormDoiSubmissionRepository $submissionRepository,
-        private SubmissionRepository $coreSubmissionRepository,
-        private FormUploader $formUploader,
-        private LoggerInterface $logger,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly FormDoiConfigRepository $configRepository,
+        private readonly FormDoiSubmissionRepository $submissionRepository,
+        private readonly SubmissionRepository $coreSubmissionRepository,
+        private readonly FormUploader $formUploader,
+        private readonly LoggerInterface $logger,
     ) {
     }
 

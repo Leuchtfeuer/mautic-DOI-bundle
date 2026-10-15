@@ -18,11 +18,14 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class SkipConditionType extends AbstractType
 {
     public function __construct(
-        private FormAdjustmentsProviderInterface $formAdjustmentsProvider,
-        private AvailableSkipOptions $availableSkipOptions,
+        private readonly FormAdjustmentsProviderInterface $formAdjustmentsProvider,
+        private readonly AvailableSkipOptions $availableSkipOptions,
     ) {
     }
 

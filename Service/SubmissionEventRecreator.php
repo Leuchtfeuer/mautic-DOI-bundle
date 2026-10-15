@@ -15,8 +15,7 @@ class SubmissionEventRecreator
     {
         return [
             'HTTP_REFERER' => $formSubmission->getReferer() ?: '',
-            /** @phpstan-ignore-next-line IpAddress can be null  */
-            'REMOTE_ADDR' => $formSubmission->getIpAddress()?->getIpAddress() ?: '',
+            'REMOTE_ADDR'  => $formSubmission->getIpAddress()?->getIpAddress() ?: '',
         ];
     }
 
@@ -43,8 +42,7 @@ class SubmissionEventRecreator
     {
         $leadFieldMatches = [];
         foreach ($form->getFields() as $f) {
-            $mappedField = $f->getMappedField();
-            /** @phpstan-ignore-next-line properties could return null */
+            $mappedField     = $f->getMappedField();
             $fieldProperties = $f->getProperties() ?? [];
 
             if (!empty($mappedField) && in_array($f->getMappedObject(), ['company', 'contact'])) {

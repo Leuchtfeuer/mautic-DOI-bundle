@@ -13,16 +13,13 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Event\ResolveConsentSnapshotEvent;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mime\Email as MimeEmail;
 
-class VerificationEmailFunctionalTest extends MauticMysqlTestCase
+final class VerificationEmailFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
-
-    private PluginFixtureHelper $pluginFixtureHelper;
 
     protected function setUp(): void
     {
@@ -30,8 +27,8 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
 
         $this->cleanupTestData();
 
-        $this->pluginFixtureHelper = new PluginFixtureHelper($this->em);
-        $this->pluginFixtureHelper->createAndEnablePlugin();
+        $pluginFixtureHelper = new PluginFixtureHelper($this->em);
+        $pluginFixtureHelper->createAndEnablePlugin();
     }
 
     private function cleanupTestData(): void
@@ -98,43 +95,43 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         $this->assertResponseIsSuccessful();
 
         $submissions = $this->em->getRepository(Submission::class)->findAll();
-        Assert::assertCount(1, $submissions);
+        $this->assertCount(1, $submissions);
         $doiSubmissions = $this->em->getRepository(FormDoiSubmission::class)->findAll();
-        Assert::assertCount(1, $doiSubmissions);
-        Assert::assertSame('pending', $doiSubmissions[0]->getStatus());
+        $this->assertCount(1, $doiSubmissions);
+        $this->assertSame('pending', $doiSubmissions[0]->getStatus());
         $consentSnapshot = $doiSubmissions[0]->getSubmittedConsentSnapshot();
-        Assert::assertIsArray($consentSnapshot);
-        Assert::assertCount(1, $consentSnapshot['fields']);
-        Assert::assertSame('checkbox_group', $consentSnapshot['fields'][0]['alias']);
-        Assert::assertSame('resolved Checkbox group', $consentSnapshot['fields'][0]['label']);
-        Assert::assertSame('1', $consentSnapshot['fields'][0]['selected_options'][0]['value']);
-        Assert::assertSame('resolved events consent', $consentSnapshot['fields'][0]['selected_options'][0]['label']);
+        $this->assertIsArray($consentSnapshot);
+        $this->assertCount(1, $consentSnapshot['fields']);
+        $this->assertSame('checkbox_group', $consentSnapshot['fields'][0]['alias']);
+        $this->assertSame('resolved Checkbox group', $consentSnapshot['fields'][0]['label']);
+        $this->assertSame('1', $consentSnapshot['fields'][0]['selected_options'][0]['value']);
+        $this->assertSame('resolved events consent', $consentSnapshot['fields'][0]['selected_options'][0]['label']);
 
         $messages = $this->getMailerMessagesByToAddress('verifytest@example.com');
-        Assert::assertCount(1, $messages, 'Exactly one verification email should be sent');
+        $this->assertCount(1, $messages, 'Exactly one verification email should be sent');
 
         $message = $messages[0];
-        Assert::assertInstanceOf(MimeEmail::class, $message);
-        Assert::assertStringContainsString('verifytest@example.com', $message->getTo()[0]->getAddress());
-        Assert::assertStringContainsString('Verify', (string) $message->getHtmlBody());
+        $this->assertInstanceOf(MimeEmail::class, $message);
+        $this->assertStringContainsString('verifytest@example.com', $message->getTo()[0]->getAddress());
+        $this->assertStringContainsString('Verify', (string) $message->getHtmlBody());
 
         $form->setCachedHtml('<form>Updated after submission</form>');
         $this->em->flush();
         $this->em->clear();
 
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissions[0]->getId());
-        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
-        Assert::assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
+        $this->assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        $this->assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
 
         $form = $this->em->getRepository(Form::class)->find($form->getId());
-        Assert::assertInstanceOf(Form::class, $form);
+        $this->assertInstanceOf(Form::class, $form);
         $this->em->remove($form);
         $this->em->flush();
         $this->em->clear();
 
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmission->getId());
-        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
-        Assert::assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
+        $this->assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        $this->assertEquals($consentSnapshot, $doiSubmission->getSubmittedConsentSnapshot());
     }
 
     private function createFormViaApi(string $name): Form
@@ -180,7 +177,7 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         $this->client->request(Request::METHOD_POST, '/api/forms/new', $payload);
         $response = json_decode($this->client->getResponse()->getContent(), true);
 
-        Assert::assertArrayHasKey('form', $response, 'API should return form data');
+        $this->assertArrayHasKey('form', $response, 'API should return form data');
 
         $formId = $response['form']['id'];
 
@@ -202,7 +199,7 @@ class VerificationEmailFunctionalTest extends MauticMysqlTestCase
         $this->client->request(Request::METHOD_POST, '/api/emails/new', $payload);
         $response = json_decode($this->client->getResponse()->getContent(), true);
 
-        Assert::assertArrayHasKey('email', $response, 'API should return email data');
+        $this->assertArrayHasKey('email', $response, 'API should return email data');
 
         $emailId = $response['email']['id'];
 

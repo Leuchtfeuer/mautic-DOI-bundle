@@ -24,10 +24,10 @@ class RuleEvaluator
     public const COOKIE_NAME = 'mautic_doi_receipt';
 
     public function __construct(
-        private FormDoiSubmissionRepository $submissionRepository,
-        private RequestStack $requestStack,
-        private CompanyLeadRepository $companyLeadRepository,
-        private FormDoiActionConditionRepository $formDoiActionConditionRepository,
+        private readonly FormDoiSubmissionRepository $submissionRepository,
+        private readonly RequestStack $requestStack,
+        private readonly CompanyLeadRepository $companyLeadRepository,
+        private readonly FormDoiActionConditionRepository $formDoiActionConditionRepository,
     ) {
     }
 
@@ -222,8 +222,8 @@ class RuleEvaluator
                 $actualValues = is_array($actualValue) ? $actualValue : explode(',', (string) $actualValue);
 
                 // Normalize both arrays for case-insensitive comparison
-                $actualValuesLower = array_map('mb_strtolower', array_map('trim', $actualValues));
-                $filterValuesLower = array_map('mb_strtolower', array_map('trim', $filterValue));
+                $actualValuesLower = array_map(mb_strtolower(...), array_map(trim(...), $actualValues));
+                $filterValuesLower = array_map(mb_strtolower(...), array_map(trim(...), $filterValue));
 
                 // Return true if any of the actual values are in the filter list
                 return !empty(array_intersect($actualValuesLower, $filterValuesLower));
@@ -235,8 +235,8 @@ class RuleEvaluator
                 // Handle single values and comma-separated string values
                 $actualValues = is_array($actualValue) ? $actualValue : explode(',', (string) $actualValue);
 
-                $actualValuesLower = array_map('mb_strtolower', array_map('trim', $actualValues));
-                $filterValuesLower = array_map('mb_strtolower', array_map('trim', $filterValue));
+                $actualValuesLower = array_map(mb_strtolower(...), array_map(trim(...), $actualValues));
+                $filterValuesLower = array_map(mb_strtolower(...), array_map(trim(...), $filterValue));
 
                 // Return true if NONE of the actual values are in the filter list
                 return empty(array_intersect($actualValuesLower, $filterValuesLower));

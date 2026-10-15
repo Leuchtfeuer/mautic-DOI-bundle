@@ -13,8 +13,11 @@
   "license": "GPL-3.0",
   "keywords": ["mautic","plugin","integration","double","opt-in","optin","doi"],
   "require": {
-    "php": "^8.1",
+    "php": "^8.2",
     "mautic/core-lib": "^7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
   },
   "extra": {
     "install-directory-name": "LeuchtfeuerDoiBundle"
@@ -45,5 +48,27 @@
       "url": "https://github.com/mautic/SymfonyBridgeBundle.git",
       "canonical": false
     }
-  ]
+  ],
+  "scripts": {
+    "fixcs": "../../bin/php-cs-fixer fix . --config ../../.php-cs-fixer.php --show-progress dots -v",
+    "rector": "cd ../.. && bin/rector process --ansi --config rector.php plugins/LeuchtfeuerDoiBundle",
+    "phpstan": "cd ../.. && bash -c '[ ! -f var/cache/test/AppKernelTestDebugContainer.xml ] && APP_ENV=test APP_DEBUG=1 bin/console >/dev/null 2>&1; php -d memory_limit=4G bin/phpstan analyse plugins/LeuchtfeuerDoiBundle --ansi'",
+    "clear-test-cache": "cd ../.. && php bin/console cache:clear --env=test --no-warmup",
+    "phpunit": [
+      "@unit",
+      "@functional"
+    ],
+    "unit": "../../bin/phpunit -d memory_limit=2048M --configuration phpunit.xml --fail-on-warning --testsuite=unit",
+    "functional": "composer clear-test-cache && cd ../.. && APP_ENV=test APP_DEBUG=0 KERNEL_CLASS=AppTestKernel bin/phpunit -d memory_limit=2G -c plugins/LeuchtfeuerDoiBundle/phpunit.xml --testsuite functional",
+    "coverage": "../../bin/phpunit -d memory_limit=2048M --configuration phpunit.xml --fail-on-warning --coverage-text --coverage-html=Tests/Coverage",
+    "test": "@phpunit",
+    "dod": "bash checkDod.sh",
+    "all": [
+      "@rector",
+      "@fixcs",
+      "@phpstan",
+      "@phpunit",
+      "@dod"
+    ]
+  }
 }

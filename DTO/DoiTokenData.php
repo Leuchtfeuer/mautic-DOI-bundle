@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerDoiBundle\DTO;
 
-final class DoiTokenData
+final readonly class DoiTokenData
 {
     public function __construct(
-        public readonly int $formId,
-        public readonly string $hash,
+        public int $formId,
+        public string $hash,
     ) {
         if ($formId <= 0) {
             throw new \InvalidArgumentException('Form ID must be positive');

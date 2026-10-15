@@ -17,12 +17,12 @@ use Psr\Log\LoggerInterface;
 class FollowUpSender
 {
     public function __construct(
-        private EmailModel $emailModel,
-        private DoiConfigManager $doiConfigManager,
-        private EntityManagerInterface $em,
-        private LoggerInterface $logger,
-        private LeadRepository $leadRepository,
-        private DoiTokenParser $doiTokenParser,
+        private readonly EmailModel $emailModel,
+        private readonly DoiConfigManager $doiConfigManager,
+        private readonly EntityManagerInterface $em,
+        private readonly LoggerInterface $logger,
+        private readonly LeadRepository $leadRepository,
+        private readonly DoiTokenParser $doiTokenParser,
     ) {
     }
 

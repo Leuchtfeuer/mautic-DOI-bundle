@@ -18,13 +18,13 @@ use Psr\Log\LoggerInterface;
 class VerificationEmailSender
 {
     public function __construct(
-        private EmailModel $emailModel,
-        private DoiConfigManager $doiConfigManager,
-        private DoiHashGenerator $doiHashGenerator,
-        private FormDoiSubmissionManager $doiSubmissionManager,
-        private DoiTokenParser $doiTokenParser,
-        private LoggerInterface $logger,
-        private ConsentSnapshotBuilder $consentSnapshotBuilder,
+        private readonly EmailModel $emailModel,
+        private readonly DoiConfigManager $doiConfigManager,
+        private readonly DoiHashGenerator $doiHashGenerator,
+        private readonly FormDoiSubmissionManager $doiSubmissionManager,
+        private readonly DoiTokenParser $doiTokenParser,
+        private readonly LoggerInterface $logger,
+        private readonly ConsentSnapshotBuilder $consentSnapshotBuilder,
     ) {
     }
 

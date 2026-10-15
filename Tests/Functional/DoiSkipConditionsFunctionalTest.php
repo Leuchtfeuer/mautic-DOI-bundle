@@ -13,12 +13,11 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Enum\DoiVerificationHistoryMetadata;
 use MauticPlugin\LeuchtfeuerDoiBundle\Event\ResolveConsentSnapshotEvent;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\DomCrawler\Form;
 use Symfony\Component\HttpFoundation\Request;
 
-class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
+final class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -94,16 +93,16 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
         /** @var FormDoiSubmission|null $doiSubmission */
         $doiSubmission = $doiRepo->findOneBy(['email' => $email]);
 
-        Assert::assertNotNull($doiSubmission, 'FormDoiSubmission was not created.');
-        Assert::assertSame($expectedStatus, $doiSubmission->getStatus(), 'The DOI submission status is incorrect.');
+        $this->assertInstanceOf(FormDoiSubmission::class, $doiSubmission, 'FormDoiSubmission was not created.');
+        $this->assertSame($expectedStatus, $doiSubmission->getStatus(), 'The DOI submission status is incorrect.');
         $consentSnapshot = $doiSubmission->getSubmittedConsentSnapshot();
-        Assert::assertIsArray($consentSnapshot);
-        Assert::assertSame(1, $consentSnapshot['version']);
+        $this->assertIsArray($consentSnapshot);
+        $this->assertSame(1, $consentSnapshot['version']);
 
         if (FormDoiSubmission::STATUS_SKIPPED === $expectedStatus) {
-            Assert::assertTrue($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');
-            Assert::assertSame(FormDoiSubmission::SKIP_REASON_CONDITION_MATCH, $doiSubmission->getSkipReason(), 'Skip reason does not match.');
-            Assert::assertNotNull($doiSubmission->getDateConfirmed(), 'DateConfirmed should be set immediately on skip.');
+            $this->assertTrue($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');
+            $this->assertSame(FormDoiSubmission::SKIP_REASON_CONDITION_MATCH, $doiSubmission->getSkipReason(), 'Skip reason does not match.');
+            $this->assertInstanceOf(\DateTime::class, $doiSubmission->getDateConfirmed(), 'DateConfirmed should be set immediately on skip.');
 
             $logs = $this->em->getRepository(LeadEventLog::class)->findBy([
                 'bundle'   => DoiVerificationHistoryMetadata::BUNDLE,
@@ -111,16 +110,12 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
                 'objectId' => $doiSubmission->getId(),
                 'action'   => 'skipped',
             ]);
-            Assert::assertCount(1, $logs, 'Skipped verification should create a contact history entry.');
-            Assert::assertEquals(
-                $doiSubmission->getDateCreated()->format('Y-m-d H:i:s'),
-                $logs[0]->getDateAdded()->format('Y-m-d H:i:s'),
-                'History entry timestamp should match form submission time.'
-            );
+            $this->assertCount(1, $logs, 'Skipped verification should create a contact history entry.');
+            $this->assertSame($doiSubmission->getDateCreated()->format('Y-m-d H:i:s'), $logs[0]->getDateAdded()->format('Y-m-d H:i:s'), 'History entry timestamp should match form submission time.');
         } else { // PENDING
-            Assert::assertFalse($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be false for pending submissions.');
-            Assert::assertNull($doiSubmission->getSkipReason(), 'Skip reason should be null for pending submissions.');
-            Assert::assertNull($doiSubmission->getDateConfirmed(), 'DateConfirmed should be null for pending submissions.');
+            $this->assertFalse($doiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be false for pending submissions.');
+            $this->assertNull($doiSubmission->getSkipReason(), 'Skip reason should be null for pending submissions.');
+            $this->assertNotInstanceOf(\DateTime::class, $doiSubmission->getDateConfirmed(), 'DateConfirmed should be null for pending submissions.');
 
             $logs = $this->em->getRepository(LeadEventLog::class)->findBy([
                 'bundle'   => DoiVerificationHistoryMetadata::BUNDLE,
@@ -128,7 +123,7 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
                 'objectId' => $doiSubmission->getId(),
                 'action'   => 'skipped',
             ]);
-            Assert::assertCount(0, $logs, 'Pending verification should not create a skipped history entry.');
+            $this->assertCount(0, $logs, 'Pending verification should not create a skipped history entry.');
         }
     }
 
@@ -169,9 +164,9 @@ class DoiSkipConditionsFunctionalTest extends MauticMysqlTestCase
         $doiSubmission = $this->em->getRepository(FormDoiSubmission::class)->findOneBy([
             'email' => 'resolved-skip@example.com',
         ]);
-        Assert::assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
-        Assert::assertSame(FormDoiSubmission::STATUS_SKIPPED, $doiSubmission->getStatus());
-        Assert::assertSame([
+        $this->assertInstanceOf(FormDoiSubmission::class, $doiSubmission);
+        $this->assertSame(FormDoiSubmission::STATUS_SKIPPED, $doiSubmission->getStatus());
+        $this->assertSame([
             'version' => 1,
             'fields'  => [[
                 'alias'            => 'interests',

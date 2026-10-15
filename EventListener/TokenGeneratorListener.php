@@ -15,8 +15,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class TokenGeneratorListener implements EventSubscriberInterface
 {
     public function __construct(
-        private TranslatorInterface $translator,
-        private Config $pluginConfig,
+        private readonly TranslatorInterface $translator,
+        private readonly Config $pluginConfig,
     ) {
     }
 

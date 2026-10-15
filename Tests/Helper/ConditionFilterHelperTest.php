@@ -7,7 +7,7 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Helper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\ConditionFilterHelper;
 use PHPUnit\Framework\TestCase;
 
-class ConditionFilterHelperTest extends TestCase
+final class ConditionFilterHelperTest extends TestCase
 {
     /**
      * @param array<string>                         $fieldAliases

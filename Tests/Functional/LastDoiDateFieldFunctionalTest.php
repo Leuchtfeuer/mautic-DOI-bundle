@@ -18,11 +18,10 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Enum\LastDoiDateField;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\LastDoiDateFieldInstaller;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
+final class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -36,11 +35,11 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $pluginFixtureHelper->createAndEnablePlugin();
 
         /** @var FieldModel $fieldModel */
-        $fieldModel = static::getContainer()->get('mautic.lead.model.field');
+        $fieldModel = self::getContainer()->get('mautic.lead.model.field');
         LastDoiDateFieldInstaller::install(
             $fieldModel,
-            static::getContainer()->get('translator'),
-            static::getContainer()->get('logger'),
+            self::getContainer()->get('translator'),
+            self::getContainer()->get('logger'),
         );
 
         $this->formFixtureHelper = new FormFixtureHelper($this->em, $this->client);
@@ -50,9 +49,9 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
     {
         $field = $this->em->getRepository(LeadField::class)->findOneBy(['alias' => LastDoiDateField::ALIAS]);
 
-        Assert::assertInstanceOf(LeadField::class, $field);
-        Assert::assertSame('datetime', $field->getType());
-        Assert::assertSame('lead', $field->getObject());
+        $this->assertInstanceOf(LeadField::class, $field);
+        $this->assertSame('datetime', $field->getType());
+        $this->assertSame('lead', $field->getObject());
     }
 
     public function testLastDoiDateIsSetOnSuccessfulVerification(): void
@@ -64,16 +63,13 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $this->verifyDoiSubmission($form, $doiSubmission);
 
         $contact = $doiSubmission->getLead();
-        Assert::assertNotNull($contact);
+        $this->assertInstanceOf(Lead::class, $contact);
 
         $this->em->refresh($contact);
         $this->em->refresh($doiSubmission);
 
-        Assert::assertSame('confirmed', $doiSubmission->getStatus());
-        Assert::assertSame(
-            $doiSubmission->getDateConfirmed()?->format('Y-m-d H:i:s'),
-            $this->getContactFieldValue($contact, LastDoiDateField::ALIAS)
-        );
+        $this->assertSame('confirmed', $doiSubmission->getStatus());
+        $this->assertSame($doiSubmission->getDateConfirmed()?->format('Y-m-d H:i:s'), $this->getContactFieldValue($contact, LastDoiDateField::ALIAS));
     }
 
     public function testLastDoiDateIsOverwrittenOnRepeatVerification(): void
@@ -86,11 +82,11 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $this->verifyDoiSubmission($formOne, $firstSubmission);
 
         $contact = $firstSubmission->getLead();
-        Assert::assertNotNull($contact);
+        $this->assertInstanceOf(Lead::class, $contact);
         $this->em->refresh($contact);
 
         $firstValue = $this->getContactFieldValue($contact, LastDoiDateField::ALIAS);
-        Assert::assertNotNull($firstValue);
+        $this->assertNotNull($firstValue);
 
         sleep(1);
 
@@ -102,9 +98,9 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $this->em->refresh($secondSubmission);
 
         $secondValue = $this->getContactFieldValue($contact, LastDoiDateField::ALIAS);
-        Assert::assertNotNull($secondValue);
-        Assert::assertSame($secondSubmission->getDateConfirmed()?->format('Y-m-d H:i:s'), $secondValue);
-        Assert::assertGreaterThan($firstValue, $secondValue);
+        $this->assertNotNull($secondValue);
+        $this->assertSame($secondSubmission->getDateConfirmed()?->format('Y-m-d H:i:s'), $secondValue);
+        $this->assertGreaterThan($firstValue, $secondValue);
     }
 
     public function testLastDoiDateCanBeUsedAsSegmentFilter(): void
@@ -140,36 +136,36 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $this->em->clear();
 
         $output = $this->testSymfonyCommand(UpdateLeadListsCommand::NAME, ['-i' => $segmentId, '--env' => 'test']);
-        Assert::assertSame(0, $output->getStatusCode());
+        $this->assertSame(0, $output->getStatusCode());
 
         $segment = $this->em->getRepository(LeadList::class)->find($segmentId);
-        Assert::assertInstanceOf(LeadList::class, $segment);
+        $this->assertInstanceOf(LeadList::class, $segment);
 
         $verifiedSubmission = $this->em->getRepository(FormDoiSubmission::class)->findOneBy(['email' => 'segment-verified@example.com']);
-        Assert::assertInstanceOf(FormDoiSubmission::class, $verifiedSubmission);
+        $this->assertInstanceOf(FormDoiSubmission::class, $verifiedSubmission);
 
         $verifiedContact = $verifiedSubmission->getLead();
-        Assert::assertNotNull($verifiedContact);
+        $this->assertInstanceOf(Lead::class, $verifiedContact);
 
         $listLeadRepository = $this->em->getRepository(ListLead::class);
-        Assert::assertNotNull($listLeadRepository->findOneBy([
+        $this->assertInstanceOf(ListLead::class, $listLeadRepository->findOneBy([
             'list' => $segment,
             'lead' => $verifiedContact,
         ]));
 
         $unverifiedSubmission = $this->em->getRepository(FormDoiSubmission::class)->findOneBy(['email' => 'segment-unverified@example.com']);
-        Assert::assertNotNull($unverifiedSubmission);
+        $this->assertInstanceOf(FormDoiSubmission::class, $unverifiedSubmission);
         $unverifiedContact = $unverifiedSubmission->getLead();
-        Assert::assertNotNull($unverifiedContact);
+        $this->assertInstanceOf(Lead::class, $unverifiedContact);
 
-        Assert::assertNull($listLeadRepository->findOneBy([
+        $this->assertNotInstanceOf(ListLead::class, $listLeadRepository->findOneBy([
             'list' => $segment,
             'lead' => $unverifiedContact,
         ]));
 
         /** @var LeadListRepository $leadListRepository */
         $leadListRepository = $this->em->getRepository(LeadList::class);
-        Assert::assertSame(1, (int) $leadListRepository->getLeadCount($segment->getId()));
+        $this->assertSame(1, (int) $leadListRepository->getLeadCount($segment->getId()));
     }
 
     private function createDoiForm(string $name): Form
@@ -193,7 +189,7 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $formElement->setValues(array_merge(['mauticform[email]' => $email], $values));
         $this->client->submit($formElement);
 
-        Assert::assertTrue($this->client->getResponse()->isOk());
+        $this->assertTrue($this->client->getResponse()->isOk());
     }
 
     private function getLatestDoiSubmissionForEmail(string $email): FormDoiSubmission
@@ -203,7 +199,7 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
             ['id' => 'DESC'],
             1
         );
-        Assert::assertCount(1, $doiSubmissions);
+        $this->assertCount(1, $doiSubmissions);
 
         return $doiSubmissions[0];
     }
@@ -211,7 +207,7 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
     private function getLatestDoiSubmission(): FormDoiSubmission
     {
         $doiSubmissions = $this->em->getRepository(FormDoiSubmission::class)->findBy([], ['id' => 'DESC'], 1);
-        Assert::assertCount(1, $doiSubmissions);
+        $this->assertCount(1, $doiSubmissions);
 
         return $doiSubmissions[0];
     }
@@ -221,7 +217,7 @@ class LastDoiDateFieldFunctionalTest extends MauticMysqlTestCase
         $token = base64_encode(sprintf('%d:%s', $form->getId(), $doiSubmission->getHash()));
         $this->client->request(Request::METHOD_GET, "/email/verify/{$token}");
 
-        Assert::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+        $this->assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
     }
 
     private function getContactFieldValue(Lead $contact, string $alias): ?string

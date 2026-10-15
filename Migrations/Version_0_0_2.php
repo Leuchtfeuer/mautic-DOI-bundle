@@ -6,10 +6,10 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Mautic\CoreBundle\Exception\SchemaException;
-use Mautic\IntegrationsBundle\Migration\AbstractMigration;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\AbstractPrefixedMigration;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\MigrationHelper;
 
-class Version_0_0_2 extends AbstractMigration
+class Version_0_0_2 extends AbstractPrefixedMigration
 {
     private string $table = 'form_doi_config';
 
@@ -27,8 +27,8 @@ class Version_0_0_2 extends AbstractMigration
 
     protected function up(): void
     {
-        $formsTable         = $this->schema->getTable($this->concatPrefix('forms'));
-        $emailsTable        = $this->schema->getTable($this->concatPrefix('emails'));
+        $formsTable         = MigrationHelper::requireTable($this->schema, $this->concatPrefix('forms'));
+        $emailsTable        = MigrationHelper::requireTable($this->schema, $this->concatPrefix('emails'));
         $formsIdColumnType  = MigrationHelper::getReferencedColumnType($formsTable);
         $emailsIdColumnType = MigrationHelper::getReferencedColumnType($emailsTable);
 

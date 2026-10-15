@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
  * It covers both the "Set Phase" (getting the cookie on verification)
  * and the "Check Phase" (skipping DOI on a subsequent submission with the cookie).
  */
-class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
+final class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
     private FormFixtureHelper $formFixtureHelper;
@@ -70,8 +70,8 @@ class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
         $doiRepo = $this->em->getRepository(FormDoiSubmission::class);
         /** @var FormDoiSubmission $initialDoiSubmission */
         $initialDoiSubmission = $doiRepo->findOneBy(['email' => $email]);
-        Assert::assertNotNull($initialDoiSubmission, 'Initial DOI Submission was not created.');
-        Assert::assertSame('pending', $initialDoiSubmission->getStatus(), 'Initial submission should be pending.');
+        $this->assertNotNull($initialDoiSubmission, 'Initial DOI Submission was not created.');
+        $this->assertSame('pending', $initialDoiSubmission->getStatus(), 'Initial submission should be pending.');
 
         // 4. Simulate the email verification click
         $hash  = $initialDoiSubmission->getHash();
@@ -88,16 +88,16 @@ class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
         $confirmedDoiSubmission = $doiRepo->find($initialDoiSubmission->getId());
         $browserProofToken      = $confirmedDoiSubmission->getBrowserProofToken();
 
-        Assert::assertSame('confirmed', $confirmedDoiSubmission->getStatus());
-        Assert::assertNotNull($browserProofToken, 'Browser proof token was not saved to DB.');
-        Assert::assertSame(64, strlen($browserProofToken));
+        $this->assertSame('confirmed', $confirmedDoiSubmission->getStatus());
+        $this->assertNotNull($browserProofToken, 'Browser proof token was not saved to DB.');
+        $this->assertSame(64, strlen($browserProofToken));
 
         /** @var Cookie $cookie */
         $cookie = $this->client->getCookieJar()->get('mautic_doi_receipt');
-        Assert::assertNotNull($cookie, 'The mautic_doi_receipt cookie was not set.');
-        Assert::assertSame($browserProofToken, $cookie->getValue(), 'Cookie value must match the token in DB.');
-        Assert::assertTrue($cookie->isHttpOnly());
-        Assert::assertTrue($cookie->isSecure(), 'Cookie should be secure for an HTTPS request.');
+        $this->assertNotNull($cookie, 'The mautic_doi_receipt cookie was not set.');
+        $this->assertSame($browserProofToken, $cookie->getValue(), 'Cookie value must match the token in DB.');
+        $this->assertTrue($cookie->isHttpOnly());
+        $this->assertTrue($cookie->isSecure(), 'Cookie should be secure for an HTTPS request.');
 
         // -------------------------------------------------------------
         // --- PHASE 2: CHECK (Second submission with cookie) ---
@@ -113,16 +113,16 @@ class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
 
         // 7. Assert that a NEW, SKIPPED DOI submission was created
         $allDoiSubmissions = $doiRepo->findBy(['email' => $email], ['id' => 'DESC']);
-        Assert::assertCount(2, $allDoiSubmissions, 'There should be two DOI submissions in total.');
+        $this->assertCount(2, $allDoiSubmissions, 'There should be two DOI submissions in total.');
 
         /** @var FormDoiSubmission $skippedDoiSubmission */
         $skippedDoiSubmission = $allDoiSubmissions[0]; // The newest one
 
-        Assert::assertSame(FormDoiSubmission::STATUS_SKIPPED, $skippedDoiSubmission->getStatus(), 'The new submission should have "skipped" status.');
-        Assert::assertTrue($skippedDoiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');
-        Assert::assertSame(FormDoiSubmission::SKIP_REASON_COOKIE_MATCH, $skippedDoiSubmission->getSkipReason(), 'Skip reason should be "cookie_match".');
-        Assert::assertNotNull($skippedDoiSubmission->getDateConfirmed(), 'DateConfirmed should be set immediately on skip.');
-        Assert::assertNotEquals($initialDoiSubmission->getId(), $skippedDoiSubmission->getId());
+        $this->assertSame(FormDoiSubmission::STATUS_SKIPPED, $skippedDoiSubmission->getStatus(), 'The new submission should have "skipped" status.');
+        $this->assertTrue($skippedDoiSubmission->isVerificationSkipped(), 'isVerificationSkipped flag should be true.');
+        $this->assertSame(FormDoiSubmission::SKIP_REASON_COOKIE_MATCH, $skippedDoiSubmission->getSkipReason(), 'Skip reason should be "cookie_match".');
+        $this->assertInstanceOf(\DateTime::class, $skippedDoiSubmission->getDateConfirmed(), 'DateConfirmed should be set immediately on skip.');
+        $this->assertNotEquals($initialDoiSubmission->getId(), $skippedDoiSubmission->getId());
 
         $logs = $this->em->getRepository(LeadEventLog::class)->findBy([
             'bundle'   => DoiVerificationHistoryMetadata::BUNDLE,
@@ -130,12 +130,12 @@ class DoiSkipCookieFunctionalTest extends MauticMysqlTestCase
             'objectId' => $skippedDoiSubmission->getId(),
             'action'   => 'skipped',
         ]);
-        Assert::assertCount(1, $logs, 'Cookie-based skip should create a contact history entry.');
+        $this->assertCount(1, $logs, 'Cookie-based skip should create a contact history entry.');
 
         // 8. Final sanity checks
         $coreSubmissionRepo = $this->em->getRepository(Submission::class);
         $leadRepo           = $this->em->getRepository(Lead::class);
-        Assert::assertCount(2, $coreSubmissionRepo->findAll(), 'There should be two core form submissions.');
-        Assert::assertCount(1, $leadRepo->findBy(['email' => $email]), 'There should still be only one contact.');
+        $this->assertCount(2, $coreSubmissionRepo->findAll(), 'There should be two core form submissions.');
+        $this->assertCount(1, $leadRepo->findBy(['email' => $email]), 'There should still be only one contact.');
     }
 }

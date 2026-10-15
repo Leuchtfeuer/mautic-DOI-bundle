@@ -17,10 +17,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class DoiSkippedSubmitActionHandler
 {
     public function __construct(
-        private TranslatorInterface $translator,
-        private UrlGeneratorInterface $urlGenerator,
-        private RequestStack $requestStack,
-        private EventDispatcherInterface $eventDispatcher,
+        private readonly TranslatorInterface $translator,
+        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly RequestStack $requestStack,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 

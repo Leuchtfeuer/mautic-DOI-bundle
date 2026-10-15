@@ -24,8 +24,8 @@ class CleanupSubmissionsCommand extends Command
     private const DEFAULT_BATCH_SIZE = 50;
 
     public function __construct(
-        private SubmissionCleanupService $cleanupService,
-        private Config $pluginConfig,
+        private readonly SubmissionCleanupService $cleanupService,
+        private readonly Config $pluginConfig,
     ) {
         parent::__construct();
     }
@@ -94,7 +94,7 @@ class CleanupSubmissionsCommand extends Command
 
         $configs = $this->cleanupService->getConfigsWithCleanupEnabled();
 
-        if (empty($configs)) {
+        if ([] === $configs) {
             $io->info('No forms have cleanup enabled.');
 
             return Command::SUCCESS;
@@ -107,7 +107,7 @@ class CleanupSubmissionsCommand extends Command
                 fn (FormDoiConfig $c): bool => $c->getForm()?->getId() === $filterFormId
             );
 
-            if (empty($configs)) {
+            if ([] === $configs) {
                 $errorIo->error(sprintf('Form ID %d does not have DOI cleanup enabled.', $filterFormId));
 
                 return Command::FAILURE;

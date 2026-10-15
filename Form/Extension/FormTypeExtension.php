@@ -23,13 +23,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class FormTypeExtension extends AbstractTypeExtension
 {
     public function __construct(
-        private DoiConfigManager $doiConfigManager,
-        private Config $pluginConfig,
-        private RequestStack $requestStack,
-        private DoiActionConditionManager $doiActionConditionManager,
-        private FormDoiActionManager $formDoiActionManager,
-        private FormDoiActionSessionManager $formDoiActionSessionManager,
-        private FormModel $formModel,
+        private readonly DoiConfigManager $doiConfigManager,
+        private readonly Config $pluginConfig,
+        private readonly RequestStack $requestStack,
+        private readonly DoiActionConditionManager $doiActionConditionManager,
+        private readonly FormDoiActionManager $formDoiActionManager,
+        private readonly FormDoiActionSessionManager $formDoiActionSessionManager,
+        private readonly FormModel $formModel,
     ) {
     }
 
@@ -39,7 +39,7 @@ class FormTypeExtension extends AbstractTypeExtension
             return;
         }
 
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, [$this, 'onPreSetData']);
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, $this->onPreSetData(...));
     }
 
     public function onPreSetData(FormEvent $event): void
@@ -58,6 +58,9 @@ class FormTypeExtension extends AbstractTypeExtension
         $this->addDoiActionConditions($form, $entity, $clonedActions ?? []);
     }
 
+    /**
+     * @param FormInterface<Form|null> $form
+     */
     private function addDoiConfig(FormInterface $form, Form $entity): void
     {
         if ($entity->getId()) {
@@ -100,6 +103,7 @@ class FormTypeExtension extends AbstractTypeExtension
     }
 
     /**
+     * @param FormInterface<Form|null>         $symfonyForm
      * @param array<int, array<string, mixed>> $clonedActions
      */
     private function addDoiActionConditions(FormInterface $symfonyForm, Form $mauticForm, array $clonedActions): void
@@ -148,6 +152,8 @@ class FormTypeExtension extends AbstractTypeExtension
     }
 
     /**
+     * @param FormInterface<Form|null> $symfonyForm
+     *
      * @return array<int, array<string, mixed>>
      */
     private function handleFormClone(FormInterface $symfonyForm): array
