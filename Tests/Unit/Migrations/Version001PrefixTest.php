@@ -8,7 +8,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Mautic\FormBundle\Entity\Form;
 use MauticPlugin\LeuchtfeuerDoiBundle\Migrations\Version_0_0_1;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 final class Version001PrefixTest extends TestCase
@@ -29,7 +32,7 @@ final class Version001PrefixTest extends TestCase
         $connection->method('createSchemaManager')->willReturn($schemaManager);
         $connection->expects($this->exactly(2))
             ->method('prepare')
-            ->willReturnCallback(function (string $sql) use (&$executedSql): \PHPUnit\Framework\MockObject\MockObject {
+            ->willReturnCallback(function (string $sql) use (&$executedSql): MockObject {
                 $executedSql[] = $sql;
 
                 $statement = $this->createMock(\Doctrine\DBAL\Statement::class);
@@ -38,10 +41,10 @@ final class Version001PrefixTest extends TestCase
                 return $statement;
             });
 
-        $entityManager = $this->createMock(EntityManager::class);
-        $entityManager->method('getConnection')->willReturn($connection);
+        $entityManager = $this->createEntityManagerMock($connection, $prefix.'forms');
 
-        $migration = new Version_0_0_1($entityManager, $prefix);
+        // Injected prefix intentionally empty: production PluginDatabase often passes ''.
+        $migration = new Version_0_0_1($entityManager, '');
 
         $this->assertTrue($migration->shouldExecute());
         $migration->execute();
@@ -68,11 +71,24 @@ final class Version001PrefixTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->method('createSchemaManager')->willReturn($schemaManager);
 
-        $entityManager = $this->createMock(EntityManager::class);
-        $entityManager->method('getConnection')->willReturn($connection);
+        $entityManager = $this->createEntityManagerMock($connection, $prefix.'forms');
 
-        $migration = new Version_0_0_1($entityManager, $prefix);
+        $migration = new Version_0_0_1($entityManager, '');
 
         $this->assertFalse($migration->shouldExecute());
+    }
+
+    private function createEntityManagerMock(Connection&MockObject $connection, string $formsTableName): EntityManager&MockObject
+    {
+        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata->method('getTableName')->willReturn($formsTableName);
+
+        $entityManager = $this->createMock(EntityManager::class);
+        $entityManager->method('getConnection')->willReturn($connection);
+        $entityManager->method('getClassMetadata')
+            ->with(Form::class)
+            ->willReturn($metadata);
+
+        return $entityManager;
     }
 }

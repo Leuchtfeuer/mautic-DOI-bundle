@@ -8,10 +8,10 @@ use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use Mautic\CoreBundle\Exception\SchemaException;
-use Mautic\IntegrationsBundle\Migration\AbstractMigration;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\AbstractPrefixedMigration;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\MigrationHelper;
 
-class Version_7_1_1 extends AbstractMigration
+class Version_7_1_1 extends AbstractPrefixedMigration
 {
     private const TABLE = 'form_doi_submissions';
 
