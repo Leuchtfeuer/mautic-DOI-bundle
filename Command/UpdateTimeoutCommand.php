@@ -24,9 +24,9 @@ class UpdateTimeoutCommand extends Command
     private const DEFAULT_BATCH_SIZE = 50;
 
     public function __construct(
-        private FormDoiSubmissionRepository $submissionRepo,
-        private EntityManagerInterface $em,
-        private Config $pluginConfig,
+        private readonly FormDoiSubmissionRepository $submissionRepo,
+        private readonly EntityManagerInterface $em,
+        private readonly Config $pluginConfig,
     ) {
         parent::__construct();
     }

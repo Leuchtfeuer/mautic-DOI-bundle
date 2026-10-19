@@ -6,10 +6,10 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Mautic\CoreBundle\Exception\SchemaException;
-use Mautic\IntegrationsBundle\Migration\AbstractMigration;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\AbstractPrefixedMigration;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\MigrationHelper;
 
-class Version_1_2_0 extends AbstractMigration
+class Version_1_2_0 extends AbstractPrefixedMigration
 {
     private string $conditionsTable = 'form_doi_actions_conditions';
 
@@ -33,10 +33,10 @@ class Version_1_2_0 extends AbstractMigration
 
     protected function up(): void
     {
-        $actionsTable         = $this->schema->getTable($this->concatPrefix('form_doi_actions'));
-        $submissionsTable     = $this->schema->getTable($this->concatPrefix('form_submissions'));
-        $actionIdType         = MigrationHelper::getReferencedColumnType($actionsTable);
-        $submissionIdType     = MigrationHelper::getReferencedColumnType($submissionsTable);
+        $actionsTable     = MigrationHelper::requireTable($this->schema, $this->concatPrefix('form_doi_actions'));
+        $submissionsTable = MigrationHelper::requireTable($this->schema, $this->concatPrefix('form_submissions'));
+        $actionIdType     = MigrationHelper::getReferencedColumnType($actionsTable);
+        $submissionIdType = MigrationHelper::getReferencedColumnType($submissionsTable);
 
         if (!$this->schema->hasTable($this->concatPrefix($this->conditionsTable))) {
             $conditionsTableName = $this->concatPrefix($this->conditionsTable);
@@ -69,7 +69,7 @@ class Version_1_2_0 extends AbstractMigration
             $logsTableName         = $this->concatPrefix($this->logsTable);
             $actionsTableName      = $this->concatPrefix('form_doi_actions');
             $submissionsTableName  = $this->concatPrefix('form_submissions');
-            $doiSubmissionsTable   = $this->schema->getTable($this->concatPrefix('form_doi_submissions'));
+            $doiSubmissionsTable   = MigrationHelper::requireTable($this->schema, $this->concatPrefix('form_doi_submissions'));
             $doiSubmissionIdType   = MigrationHelper::getReferencedColumnType($doiSubmissionsTable);
 
             $this->addSql(sprintf(

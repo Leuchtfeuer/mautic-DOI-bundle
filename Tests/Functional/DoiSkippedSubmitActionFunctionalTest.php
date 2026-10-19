@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Functional tests for the custom post-action feature when DOI is skipped for a known contact.
  */
-class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
+final class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
     private FormFixtureHelper $formFixtureHelper;
@@ -54,7 +54,6 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         // 1. Arrange
         $email = 'redirect-test@example.com';
 
-        /** @var Form $form */
         $form = $this->formFixtureHelper->createFormViaApi('Test Skip Redirect Form');
         $form->setIsPublished(true);
         $form->setPostAction('redirect');
@@ -76,7 +75,7 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         $this->client->submit($formElement);
 
         // 3. Assert
-        Assert::assertSame(self::CUSTOM_REDIRECT_URL, $this->client->getRequest()->getPathInfo(), 'Should have been redirected to the custom skip action URL.');
+        $this->assertSame(self::CUSTOM_REDIRECT_URL, $this->client->getRequest()->getPathInfo(), 'Should have been redirected to the custom skip action URL.');
     }
 
     /**
@@ -88,7 +87,6 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         // 1. Arrange
         $email = 'message-test@example.com';
 
-        /** @var Form $form */
         $form = $this->formFixtureHelper->createFormViaApi('Test Skip Message Form');
         $form->setIsPublished(true);
         $form->setPostAction('message');
@@ -116,12 +114,12 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         $content  = $response->getContent();
 
         // 3. Assert
-        Assert::assertTrue($response->isOk(), 'Response should be successful.');
+        $this->assertTrue($response->isOk(), 'Response should be successful.');
 
         // Decode Unicode escapes (e.g., \u0022 -> ")
         $decodedContent = str_replace('\u0020', ' ', $content);
-        Assert::assertStringContainsString(self::CUSTOM_MESSAGE, $decodedContent);
-        Assert::assertStringNotContainsString(self::STANDARD_MESSAGE, $decodedContent);
+        $this->assertStringContainsString(self::CUSTOM_MESSAGE, $decodedContent);
+        $this->assertStringNotContainsString(self::STANDARD_MESSAGE, $decodedContent);
     }
 
     /**
@@ -133,7 +131,6 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         // 1. Arrange
         $email = 'fallback-test@example.com';
 
-        /** @var Form $form */
         $form = $this->formFixtureHelper->createFormViaApi('Test Fallback Form');
         $form->setIsPublished(true);
         $form->setPostAction('redirect');
@@ -154,7 +151,7 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         $this->client->submit($formElement);
 
         // 3. Assert
-        Assert::assertSame(self::STANDARD_REDIRECT_URL, $this->client->getRequest()->getPathInfo(), 'Should have been redirected to the standard form action URL.');
+        $this->assertSame(self::STANDARD_REDIRECT_URL, $this->client->getRequest()->getPathInfo(), 'Should have been redirected to the standard form action URL.');
     }
 
     /**
@@ -166,7 +163,6 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         // 1. Arrange
         $email = 'redirect-override-test@example.com';
 
-        /** @var Form $form */
         $form = $this->formFixtureHelper->createFormViaApi('Test Skip Message Over Redirect Form');
         $form->setIsPublished(true);
         // Default action is a redirect
@@ -196,12 +192,12 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         $content  = $response->getContent();
 
         // 3. Assert
-        Assert::assertTrue($response->isOk(), 'Response should be successful.');
-        Assert::assertFalse($response->isRedirect(), 'Response should not be an HTTP redirect.');
+        $this->assertTrue($response->isOk(), 'Response should be successful.');
+        $this->assertFalse($response->isRedirect(), 'Response should not be an HTTP redirect.');
 
         // For AJAX requests, Mautic returns HTML with a postMessage script. We need to parse the JSON from it.
         preg_match('/parent\\.postMessage\\("(.+)",/U', $content, $matches);
-        Assert::assertArrayHasKey(1, $matches, 'Could not find postMessage payload in the response.');
+        $this->assertArrayHasKey(1, $matches, 'Could not find postMessage payload in the response.');
 
         // The captured group is a string-escaped JSON payload with Unicode sequences (\uXXXX).
         // To correctly decode it, we perform a two-step process.
@@ -210,16 +206,16 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
 
         // 2. The first decode resolves the Unicode sequences (e.g., \u007B -> {) into a single string.
         $decodedJsonString = json_decode($jsonStringLiteral);
-        Assert::assertIsString($decodedJsonString, 'First JSON decode should result in a string.');
+        $this->assertIsString($decodedJsonString, 'First JSON decode should result in a string.');
 
         // 3. The second decode parses the now-valid JSON string into a PHP array.
         $postMessagePayload = json_decode($decodedJsonString, true);
-        Assert::assertIsArray($postMessagePayload, "The postMessage payload could not be decoded into an array. JSON: {$decodedJsonString}");
+        $this->assertIsArray($postMessagePayload, "The postMessage payload could not be decoded into an array. JSON: {$decodedJsonString}");
 
         // The core assertion: The message action should *replace* the redirect action in the response data.
-        Assert::assertNull($postMessagePayload['redirect'], 'The "redirect" key should be null".');
-        Assert::assertArrayHasKey('successMessage', $postMessagePayload, 'The "successMessage" key should be present.');
-        Assert::assertSame(self::CUSTOM_MESSAGE, $postMessagePayload['successMessage'], 'The success message should be the custom skip message.');
+        $this->assertNull($postMessagePayload['redirect'], 'The "redirect" key should be null".');
+        $this->assertArrayHasKey('successMessage', $postMessagePayload, 'The "successMessage" key should be present.');
+        $this->assertSame(self::CUSTOM_MESSAGE, $postMessagePayload['successMessage'], 'The success message should be the custom skip message.');
     }
 
     /**
@@ -231,7 +227,6 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         // 1. Arrange
         $email = 'hideform-test@example.com';
 
-        /** @var Form $form */
         $form = $this->formFixtureHelper->createFormViaApi('Test Skip Hide Form');
         $form->setIsPublished(true);
         // Default action is a message
@@ -261,12 +256,12 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
         $content  = $response->getContent();
 
         // 3. Assert
-        Assert::assertTrue($response->isOk(), 'Response should be successful.');
-        Assert::assertFalse($response->isRedirect(), 'Response should not be an HTTP redirect.');
+        $this->assertTrue($response->isOk(), 'Response should be successful.');
+        $this->assertFalse($response->isRedirect(), 'Response should not be an HTTP redirect.');
 
         // For AJAX requests, Mautic returns HTML with a postMessage script. We need to parse the JSON from it.
         preg_match('/parent\\.postMessage\\("(.+)",/U', $content, $matches);
-        Assert::assertArrayHasKey(1, $matches, 'Could not find postMessage payload in the response.');
+        $this->assertArrayHasKey(1, $matches, 'Could not find postMessage payload in the response.');
 
         // The captured group is a string-escaped JSON payload with Unicode sequences (\uXXXX).
         // To correctly decode it, we perform a two-step process.
@@ -275,15 +270,15 @@ class DoiSkippedSubmitActionFunctionalTest extends MauticMysqlTestCase
 
         // 2. The first decode resolves the Unicode sequences (e.g., \u007B -> {) into a single string.
         $decodedJsonString = json_decode($jsonStringLiteral);
-        Assert::assertIsString($decodedJsonString, 'First JSON decode should result in a string.');
+        $this->assertIsString($decodedJsonString, 'First JSON decode should result in a string.');
 
         // 3. The second decode parses the now-valid JSON string into a PHP array.
         $postMessagePayload = json_decode($decodedJsonString, true);
-        Assert::assertIsArray($postMessagePayload, "The postMessage payload could not be decoded into an array. JSON: {$decodedJsonString}");
+        $this->assertIsArray($postMessagePayload, "The postMessage payload could not be decoded into an array. JSON: {$decodedJsonString}");
 
         // The core assertion: The hideform action should hide the form and show the custom message.
-        Assert::assertTrue($postMessagePayload['hideform'], 'The "hideform" key should be true.');
-        Assert::assertArrayHasKey('successMessage', $postMessagePayload, 'The "successMessage" key should be present.');
-        Assert::assertSame(self::CUSTOM_MESSAGE, $postMessagePayload['successMessage'], 'The success message should be the custom skip message.');
+        $this->assertTrue($postMessagePayload['hideform'], 'The "hideform" key should be true.');
+        $this->assertArrayHasKey('successMessage', $postMessagePayload, 'The "successMessage" key should be present.');
+        $this->assertSame(self::CUSTOM_MESSAGE, $postMessagePayload['successMessage'], 'The success message should be the custom skip message.');
     }
 }

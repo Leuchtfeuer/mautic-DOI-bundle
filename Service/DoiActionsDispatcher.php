@@ -15,14 +15,14 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 class DoiActionsDispatcher
 {
     public function __construct(
-        private EventDispatcherInterface $eventDispatcher,
-        private FormDoiActionRepository $formDoiActionRepository,
-        private FormDoiActionMapper $formDoiActionMapper,
-        private SubmissionRepository $submissionRepository,
-        private FormModel $formModel,
-        private SubmissionEventRecreator $submissionEventRecreator,
-        private RuleEvaluator $ruleEvaluator,
-        private FormDoiActionExecutionLogRepository $formDoiActionExecutionLogRepository,
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly FormDoiActionRepository $formDoiActionRepository,
+        private readonly FormDoiActionMapper $formDoiActionMapper,
+        private readonly SubmissionRepository $submissionRepository,
+        private readonly FormModel $formModel,
+        private readonly SubmissionEventRecreator $submissionEventRecreator,
+        private readonly RuleEvaluator $ruleEvaluator,
+        private readonly FormDoiActionExecutionLogRepository $formDoiActionExecutionLogRepository,
     ) {
     }
 

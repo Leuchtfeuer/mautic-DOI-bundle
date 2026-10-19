@@ -16,10 +16,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FormBuilderTemplateSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private FormDoiActionManager $formDoiActionManager,
-        private FormDoiActionSessionManager $formDoiActionSessionManager,
-        private Config $pluginConfig,
-        private AvailableSkipOptions $availableSkipOptions,
+        private readonly FormDoiActionManager $formDoiActionManager,
+        private readonly FormDoiActionSessionManager $formDoiActionSessionManager,
+        private readonly Config $pluginConfig,
+        private readonly AvailableSkipOptions $availableSkipOptions,
     ) {
     }
 

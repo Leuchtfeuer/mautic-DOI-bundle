@@ -15,12 +15,15 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class DoiActionConditionEntryType extends AbstractType
 {
     public function __construct(
-        private TranslatorInterface $translator,
-        private AvailableSkipOptions $availableOptionsProvider,
-        private RelativeDate $relativeDate,
+        private readonly TranslatorInterface $translator,
+        private readonly AvailableSkipOptions $availableOptionsProvider,
+        private readonly RelativeDate $relativeDate,
     ) {
     }
 

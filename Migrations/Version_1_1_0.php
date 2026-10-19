@@ -6,9 +6,9 @@ namespace MauticPlugin\LeuchtfeuerDoiBundle\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Mautic\CoreBundle\Exception\SchemaException;
-use Mautic\IntegrationsBundle\Migration\AbstractMigration;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\AbstractPrefixedMigration;
 
-class Version_1_1_0 extends AbstractMigration
+class Version_1_1_0 extends AbstractPrefixedMigration
 {
     private string $formDoiSubmissionsTable = 'form_doi_submissions';
 

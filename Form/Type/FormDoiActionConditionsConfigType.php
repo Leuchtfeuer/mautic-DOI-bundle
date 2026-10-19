@@ -11,10 +11,13 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class FormDoiActionConditionsConfigType extends AbstractType
 {
     public function __construct(
-        private AvailableSkipOptions $availableOptionsProvider,
+        private readonly AvailableSkipOptions $availableOptionsProvider,
     ) {
     }
 

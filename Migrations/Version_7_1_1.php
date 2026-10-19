@@ -8,10 +8,10 @@ use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use Mautic\CoreBundle\Exception\SchemaException;
-use Mautic\IntegrationsBundle\Migration\AbstractMigration;
+use MauticPlugin\LeuchtfeuerDoiBundle\Helper\AbstractPrefixedMigration;
 use MauticPlugin\LeuchtfeuerDoiBundle\Helper\MigrationHelper;
 
-class Version_7_1_1 extends AbstractMigration
+class Version_7_1_1 extends AbstractPrefixedMigration
 {
     private const TABLE = 'form_doi_submissions';
 
@@ -72,7 +72,7 @@ class Version_7_1_1 extends AbstractMigration
         }
 
         if ($table->getColumn($columnName)->getNotnull()) {
-            $referencedTableSchema = $this->schema->getTable($this->concatPrefix($referencedTable));
+            $referencedTableSchema = MigrationHelper::requireTable($this->schema, $this->concatPrefix($referencedTable));
             $columnType            = MigrationHelper::getReferencedColumnType($referencedTableSchema);
             $this->addSql(sprintf('ALTER TABLE `%s` MODIFY `%s` %s DEFAULT NULL', $tableName, $columnName, $columnType));
         }

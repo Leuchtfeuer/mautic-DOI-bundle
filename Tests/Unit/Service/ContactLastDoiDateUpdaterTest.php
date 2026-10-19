@@ -15,13 +15,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-class ContactLastDoiDateUpdaterTest extends TestCase
+final class ContactLastDoiDateUpdaterTest extends TestCase
 {
     /** @var LeadModel&MockObject */
-    private LeadModel $leadModel;
+    private MockObject $leadModel;
 
     /** @var LoggerInterface&MockObject */
-    private LoggerInterface $logger;
+    private MockObject $logger;
 
     private ContactLastDoiDateUpdater $updater;
 
@@ -93,9 +93,13 @@ class ContactLastDoiDateUpdaterTest extends TestCase
             ->method('error')
             ->with(
                 'Failed to update last_doi_date contact field',
-                $this->callback(static fn (array $context): bool => 7 === $context['leadId']
-                    && 99 === $context['doiSubmissionId']
-                    && 'update failed' === $context['error'])
+                $this->callback(function (array $context): bool {
+                    $this->assertSame(7, $context['leadId']);
+                    $this->assertSame(99, $context['doiSubmissionId']);
+                    $this->assertSame('update failed', $context['error']);
+
+                    return true;
+                })
             );
 
         $this->updater->updateFromSubmission($submission);

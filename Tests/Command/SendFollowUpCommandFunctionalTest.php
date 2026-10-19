@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Command;
 
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
@@ -11,13 +13,12 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use MauticPlugin\LeuchtfeuerDoiBundle\Service\DoiTokenParser;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Mime\Email as MimeEmail;
 
-class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
+final class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -43,38 +44,38 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 1 | Sent: 1', $output);
+        $this->assertStringContainsString('Processed: 1 | Sent: 1', $output);
 
         $this->em->refresh($oldSubmission);
         $this->em->refresh($recentSubmission);
 
-        Assert::assertNotNull($oldSubmission->getDateFollowupSent());
-        Assert::assertSame('pending', $recentSubmission->getStatus());
-        Assert::assertNull($recentSubmission->getDateFollowupSent());
+        $this->assertInstanceOf(\DateTime::class, $oldSubmission->getDateFollowupSent());
+        $this->assertSame('pending', $recentSubmission->getStatus());
+        $this->assertNotInstanceOf(\DateTime::class, $recentSubmission->getDateFollowupSent());
 
         // Verify email was sent with correct DOI token
         $messages = $this->getMailerMessagesByToAddress('old@example.com');
-        Assert::assertCount(1, $messages, 'Should have exactly one follow-up email sent');
+        $this->assertCount(1, $messages, 'Should have exactly one follow-up email sent');
         $message = $messages[0];
-        Assert::assertInstanceOf(MimeEmail::class, $message);
+        $this->assertInstanceOf(MimeEmail::class, $message);
         $htmlBody = $message->getHtmlBody();
 
         $doiLinkPattern = '/https?:\/\/[^\/]+\/email\/verify\/([A-Za-z0-9+\/=]+)/';
         preg_match($doiLinkPattern, $htmlBody, $matches);
-        Assert::assertNotEmpty($matches, 'DOI link should be present in follow-up email');
-        Assert::assertNotEmpty($matches[1], 'DOI token should be present');
+        $this->assertNotEmpty($matches, 'DOI link should be present in follow-up email');
+        $this->assertNotEmpty($matches[1], 'DOI token should be present');
 
         // Use DoiTokenParser to decode and verify the token
-        $tokenParser = static::getContainer()->get(DoiTokenParser::class);
-        assert($tokenParser instanceof DoiTokenParser);
+        $tokenParser = self::getContainer()->get(DoiTokenParser::class);
+        $this->assertInstanceOf(DoiTokenParser::class, $tokenParser);
         $token       = $matches[1];
         $decodedData = $tokenParser->decode($token);
 
-        Assert::assertInstanceOf(DoiTokenData::class, $decodedData, 'DOI token should be decodable');
+        $this->assertInstanceOf(DoiTokenData::class, $decodedData, 'DOI token should be decodable');
         $tokenFormId = $decodedData->formId;
         $tokenHash   = $decodedData->hash;
-        Assert::assertSame($form->getId(), $tokenFormId, 'Form ID in token should match expected');
-        Assert::assertSame($oldSubmission->getHash(), $tokenHash, 'DOI hash in token should match submission hash');
+        $this->assertSame($form->getId(), $tokenFormId, 'Form ID in token should match expected');
+        $this->assertSame($oldSubmission->getHash(), $tokenHash, 'DOI hash in token should match submission hash');
     }
 
     public function testDifferentContactsGetIndividualLinks(): void
@@ -88,59 +89,59 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 2 | Sent: 2', $output);
+        $this->assertStringContainsString('Processed: 2 | Sent: 2', $output);
 
         $this->em->refresh($submission1);
         $this->em->refresh($submission2);
 
-        Assert::assertNotNull($submission1->getDateFollowupSent());
-        Assert::assertNotNull($submission2->getDateFollowupSent());
+        $this->assertInstanceOf(\DateTime::class, $submission1->getDateFollowupSent());
+        $this->assertInstanceOf(\DateTime::class, $submission2->getDateFollowupSent());
 
         // Verify both contacts received emails
         $messages1 = $this->getMailerMessagesByToAddress('contact1@example.com');
         $messages2 = $this->getMailerMessagesByToAddress('contact2@example.com');
-        Assert::assertCount(1, $messages1, 'Contact 1 should have exactly one follow-up email');
-        Assert::assertCount(1, $messages2, 'Contact 2 should have exactly one follow-up email');
+        $this->assertCount(1, $messages1, 'Contact 1 should have exactly one follow-up email');
+        $this->assertCount(1, $messages2, 'Contact 2 should have exactly one follow-up email');
 
         // Extract DOI tokens from both emails
         $doiLinkPattern = '/https?:\/\/[^\/]+\/email\/verify\/([A-Za-z0-9+\/=]+)/';
 
-        Assert::assertInstanceOf(MimeEmail::class, $messages1[0]);
+        $this->assertInstanceOf(MimeEmail::class, $messages1[0]);
         $htmlBody1 = $messages1[0]->getHtmlBody();
         preg_match($doiLinkPattern, $htmlBody1, $matches1);
-        Assert::assertNotEmpty($matches1, 'DOI link should be present in contact 1 email');
+        $this->assertNotEmpty($matches1, 'DOI link should be present in contact 1 email');
         $token1 = $matches1[1];
 
-        Assert::assertInstanceOf(MimeEmail::class, $messages2[0]);
+        $this->assertInstanceOf(MimeEmail::class, $messages2[0]);
         $htmlBody2 = $messages2[0]->getHtmlBody();
         preg_match($doiLinkPattern, $htmlBody2, $matches2);
-        Assert::assertNotEmpty($matches2, 'DOI link should be present in contact 2 email');
+        $this->assertNotEmpty($matches2, 'DOI link should be present in contact 2 email');
         $token2 = $matches2[1];
 
         // Verify tokens are different
-        Assert::assertNotSame($token1, $token2, 'Each contact should have a unique DOI token');
+        $this->assertNotSame($token1, $token2, 'Each contact should have a unique DOI token');
 
         // Verify each token contains the correct submission hash
-        $tokenParser = static::getContainer()->get(DoiTokenParser::class);
-        assert($tokenParser instanceof DoiTokenParser);
+        $tokenParser = self::getContainer()->get(DoiTokenParser::class);
+        $this->assertInstanceOf(DoiTokenParser::class, $tokenParser);
 
         $decodedData1 = $tokenParser->decode($token1);
-        Assert::assertInstanceOf(DoiTokenData::class, $decodedData1, 'Contact 1 DOI token should be decodable');
+        $this->assertInstanceOf(DoiTokenData::class, $decodedData1, 'Contact 1 DOI token should be decodable');
         $tokenFormId1 = $decodedData1->formId;
         $tokenHash1   = $decodedData1->hash;
 
-        Assert::assertSame($form->getId(), $tokenFormId1, 'Form ID in token 1 should match expected');
-        Assert::assertSame($submission1->getHash(), $tokenHash1, 'DOI hash in token 1 should match submission 1 hash');
+        $this->assertSame($form->getId(), $tokenFormId1, 'Form ID in token 1 should match expected');
+        $this->assertSame($submission1->getHash(), $tokenHash1, 'DOI hash in token 1 should match submission 1 hash');
 
         $decodedData2 = $tokenParser->decode($token2);
-        Assert::assertInstanceOf(DoiTokenData::class, $decodedData2, 'Contact 2 DOI token should be decodable');
+        $this->assertInstanceOf(DoiTokenData::class, $decodedData2, 'Contact 2 DOI token should be decodable');
         $tokenFormId2 = $decodedData2->formId;
         $tokenHash2   = $decodedData2->hash;
-        Assert::assertSame($form->getId(), $tokenFormId2, 'Form ID in token 2 should match expected');
-        Assert::assertSame($submission2->getHash(), $tokenHash2, 'DOI hash in token 2 should match submission 2 hash');
+        $this->assertSame($form->getId(), $tokenFormId2, 'Form ID in token 2 should match expected');
+        $this->assertSame($submission2->getHash(), $tokenHash2, 'DOI hash in token 2 should match submission 2 hash');
 
         // Verify the hashes are different (ensuring individual links)
-        Assert::assertNotSame($tokenHash1, $tokenHash2, 'Each contact should have a unique submission hash');
+        $this->assertNotSame($tokenHash1, $tokenHash2, 'Each contact should have a unique submission hash');
     }
 
     public function testCommandWithCustomLimit(): void
@@ -155,7 +156,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup', ['--limit' => '2']);
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 2 | Sent: 2', $output);
+        $this->assertStringContainsString('Processed: 2 | Sent: 2', $output);
     }
 
     public function testCommandWithNoPendingSubmissions(): void
@@ -163,7 +164,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 0 | Sent: 0', $output);
+        $this->assertStringContainsString('Processed: 0 | Sent: 0', $output);
     }
 
     public function testCommandRespectsWaitTime(): void
@@ -179,15 +180,15 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $this->em->refresh($notReadySubmission);
         $this->em->refresh($readySubmission);
 
-        Assert::assertSame('pending', $notReadySubmission->getStatus());
-        Assert::assertNull($notReadySubmission->getDateFollowupSent());
-        Assert::assertNotNull($readySubmission->getDateFollowupSent());
+        $this->assertSame('pending', $notReadySubmission->getStatus());
+        $this->assertNotInstanceOf(\DateTime::class, $notReadySubmission->getDateFollowupSent());
+        $this->assertInstanceOf(\DateTime::class, $readySubmission->getDateFollowupSent());
 
         // Verify only the ready submission got an email
         $readyMessages    = $this->getMailerMessagesByToAddress('ready@example.com');
         $notReadyMessages = $this->getMailerMessagesByToAddress('notready@example.com');
-        Assert::assertCount(1, $readyMessages, 'Ready submission should have received follow-up email');
-        Assert::assertCount(0, $notReadyMessages, 'Not ready submission should not have received follow-up email');
+        $this->assertCount(1, $readyMessages, 'Ready submission should have received follow-up email');
+        $this->assertCount(0, $notReadyMessages, 'Not ready submission should not have received follow-up email');
     }
 
     public function testCommandWithBatchSize(): void
@@ -206,13 +207,13 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup', ['--batch' => '2']);
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 5 | Sent: 5', $output);
+        $this->assertStringContainsString('Processed: 5 | Sent: 5', $output);
 
         // Verify all emails were sent
         $emails = ['test1@example.com', 'test2@example.com', 'test3@example.com', 'test4@example.com', 'test5@example.com'];
         foreach ($emails as $email) {
             $messages = $this->getMailerMessagesByToAddress($email);
-            Assert::assertCount(1, $messages, "Should have exactly one follow-up email sent to {$email}");
+            $this->assertCount(1, $messages, "Should have exactly one follow-up email sent to {$email}");
         }
     }
 
@@ -237,7 +238,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 5 | Sent: 5', $output);
+        $this->assertStringContainsString('Processed: 5 | Sent: 5', $output);
 
         // Count total emails sent - should be exactly 5
         $totalEmailsSent = 0;
@@ -245,7 +246,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
             $messages = $this->getMailerMessagesByToAddress("test{$i}@example.com");
             $totalEmailsSent += count($messages);
         }
-        Assert::assertSame(5, $totalEmailsSent, 'Should have sent exactly 5 emails due to limit');
+        $this->assertSame(5, $totalEmailsSent, 'Should have sent exactly 5 emails due to limit');
     }
 
     public function testCommandDisplaysMessageWhenPluginDisabled(): void
@@ -255,7 +256,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('DOI plugin is disabled', $output);
+        $this->assertStringContainsString('DOI plugin is disabled', $output);
     }
 
     public function testCommandRespectsModifiedWaitTime(): void
@@ -274,22 +275,22 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:send-followup');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 1 | Sent: 1', $output);
+        $this->assertStringContainsString('Processed: 1 | Sent: 1', $output);
 
         $this->em->refresh($readySubmission);
         $this->em->refresh($notReadySubmission);
 
         // The 13-hour-old submission should have been processed
-        Assert::assertNotNull($readySubmission->getDateFollowupSent());
+        $this->assertInstanceOf(\DateTime::class, $readySubmission->getDateFollowupSent());
         // The 11-hour-old submission should still be pending
-        Assert::assertSame('pending', $notReadySubmission->getStatus());
-        Assert::assertNull($notReadySubmission->getDateFollowupSent());
+        $this->assertSame('pending', $notReadySubmission->getStatus());
+        $this->assertNotInstanceOf(\DateTime::class, $notReadySubmission->getDateFollowupSent());
 
         // Verify only the ready submission got an email
         $readyMessages    = $this->getMailerMessagesByToAddress('ready@example.com');
         $notReadyMessages = $this->getMailerMessagesByToAddress('notready@example.com');
-        Assert::assertCount(1, $readyMessages, 'Ready submission should have received follow-up email');
-        Assert::assertCount(0, $notReadyMessages, 'Not ready submission should not have received follow-up email');
+        $this->assertCount(1, $readyMessages, 'Ready submission should have received follow-up email');
+        $this->assertCount(0, $notReadyMessages, 'Not ready submission should not have received follow-up email');
     }
 
     public function testVerboseOutputAggregatedContactIds(): void
@@ -302,7 +303,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $due2   = $this->formFixtureHelper->createDoiSubmission($form, 'due2@example.com', new \DateTime('-26 hours'));
         $recent = $this->formFixtureHelper->createDoiSubmission($form, 'recent@example.com', new \DateTime('-1 hour'));
 
-        $kernel        = static::getContainer()->get('kernel');
+        $kernel        = self::getContainer()->get('kernel');
         $application   = new Application($kernel);
         $command       = $application->find('leuchtfeuer:doi:send-followup');
         $commandTester = new CommandTester($command);
@@ -310,11 +311,11 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $output        = $commandTester->getDisplay();
 
         // Summary should match 2 processed and sent
-        Assert::assertStringContainsString('Processed: 2 | Sent: 2', $output);
+        $this->assertStringContainsString('Processed: 2 | Sent: 2', $output);
 
         // Aggregated contact IDs should be printed and contain both due contacts
-        Assert::assertStringContainsString('Processed contact IDs:', $output);
-        Assert::assertStringContainsString('Sent contact IDs:', $output);
+        $this->assertStringContainsString('Processed contact IDs:', $output);
+        $this->assertStringContainsString('Sent contact IDs:', $output);
 
         $this->em->refresh($due1);
         $this->em->refresh($due2);
@@ -324,15 +325,15 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $id2 = $due2->getLead() ? $due2->getLead()->getId() : null;
         $id3 = $recent->getLead() ? $recent->getLead()->getId() : null;
 
-        Assert::assertNotNull($id1);
-        Assert::assertNotNull($id2);
+        $this->assertNotNull($id1);
+        $this->assertNotNull($id2);
 
         // Both due IDs must be present in the aggregated lines
-        Assert::assertStringContainsString((string) $id1, $output);
-        Assert::assertStringContainsString((string) $id2, $output);
+        $this->assertStringContainsString((string) $id1, $output);
+        $this->assertStringContainsString((string) $id2, $output);
         // The recent (not processed) ID should not appear in -v output
         if (null !== $id3) {
-            Assert::assertStringNotContainsString((string) $id3, $output);
+            $this->assertStringNotContainsString((string) $id3, $output);
         }
     }
 
@@ -344,7 +345,7 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $due1 = $this->formFixtureHelper->createDoiSubmission($form, 'vv1@example.com', new \DateTime('-25 hours'));
         $due2 = $this->formFixtureHelper->createDoiSubmission($form, 'vv2@example.com', new \DateTime('-26 hours'));
 
-        $kernel        = static::getContainer()->get('kernel');
+        $kernel        = self::getContainer()->get('kernel');
         $application   = new Application($kernel);
         $command       = $application->find('leuchtfeuer:doi:send-followup');
         $commandTester = new CommandTester($command);
@@ -358,14 +359,14 @@ class SendFollowUpCommandFunctionalTest extends MauticMysqlTestCase
         $id1 = $due1->getLead() ? $due1->getLead()->getId() : null;
         $id2 = $due2->getLead() ? $due2->getLead()->getId() : null;
 
-        Assert::assertNotNull($id1);
-        Assert::assertNotNull($id2);
+        $this->assertNotNull($id1);
+        $this->assertNotNull($id2);
 
-        Assert::assertStringContainsString(sprintf('Follow-up sent to contact ID %s', (string) $id1), $output);
-        Assert::assertStringContainsString(sprintf('Follow-up sent to contact ID %s', (string) $id2), $output);
+        $this->assertStringContainsString(sprintf('Follow-up sent to contact ID %s', (string) $id1), $output);
+        $this->assertStringContainsString(sprintf('Follow-up sent to contact ID %s', (string) $id2), $output);
 
         // Summary should still be present
-        Assert::assertStringContainsString('Processed: 2 | Sent: 2', $output);
+        $this->assertStringContainsString('Processed: 2 | Sent: 2', $output);
     }
 
     private function createDoiConfig(Form $form): FormDoiConfig

@@ -10,7 +10,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 class FormDoiSubmissionManager
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 

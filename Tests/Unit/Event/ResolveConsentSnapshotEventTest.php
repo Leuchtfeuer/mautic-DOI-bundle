@@ -33,8 +33,8 @@ final class ResolveConsentSnapshotEventTest extends TestCase
             return 'resolved '.$label;
         });
 
-        self::assertSame(['consent.yes.token'], $transformedLabels);
-        self::assertSame([
+        $this->assertSame(['consent.yes.token'], $transformedLabels);
+        $this->assertSame([
             'version' => 1,
             'fields'  => [[
                 'alias'            => 'consent',

@@ -19,9 +19,9 @@ class SendFollowUpCommand extends Command
     private const DEFAULT_BATCH_SIZE = 50;
 
     public function __construct(
-        private FormDoiSubmissionRepository $submissionRepo,
-        private FollowUpSender $followUpSender,
-        private Config $pluginConfig,
+        private readonly FormDoiSubmissionRepository $submissionRepo,
+        private readonly FollowUpSender $followUpSender,
+        private readonly Config $pluginConfig,
     ) {
         parent::__construct();
     }

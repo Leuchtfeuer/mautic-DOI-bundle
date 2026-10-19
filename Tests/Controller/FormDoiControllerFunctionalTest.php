@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerDoiBundle\Tests\Controller;
 
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
@@ -12,7 +14,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
 use Symfony\Component\DomCrawler\Crawler;
 
-class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
+final class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -59,13 +61,13 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
 
         // Verify DOI config was saved
         $savedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
-        $this->assertNotNull($savedDoiConfig);
+        $this->assertInstanceOf(FormDoiConfig::class, $savedDoiConfig);
         $this->assertTrue($savedDoiConfig->isEnabled());
         $this->assertTrue($savedDoiConfig->isSkipOnCookie());
         $this->assertEquals($verificationEmail->getId(), $savedDoiConfig->getVerificationEmail()->getId());
         $this->assertEquals($followUpEmail->getId(), $savedDoiConfig->getFollowUpEmail()->getId());
-        $this->assertEquals('https://example.com/success', $savedDoiConfig->getSuccessRedirectUrl());
-        $this->assertEquals('https://example.com/error', $savedDoiConfig->getErrorRedirectUrl());
+        $this->assertSame('https://example.com/success', $savedDoiConfig->getSuccessRedirectUrl());
+        $this->assertSame('https://example.com/error', $savedDoiConfig->getErrorRedirectUrl());
     }
 
     /**
@@ -88,7 +90,7 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
 
         // Verify DOI config was saved as disabled
         $savedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
-        $this->assertNotNull($savedDoiConfig);
+        $this->assertInstanceOf(FormDoiConfig::class, $savedDoiConfig);
         $this->assertFalse($savedDoiConfig->isEnabled());
     }
 
@@ -139,7 +141,7 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
 
         // Verify DOI config was saved as disabled
         $savedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
-        $this->assertNotNull($savedDoiConfig);
+        $this->assertInstanceOf(FormDoiConfig::class, $savedDoiConfig);
         $this->assertFalse($savedDoiConfig->isEnabled());
     }
 
@@ -181,7 +183,7 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
 
         $this->assertTrue($this->client->getResponse()->isOk());
         $savedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
-        $this->assertNotNull($savedDoiConfig);
+        $this->assertInstanceOf(FormDoiConfig::class, $savedDoiConfig);
         $this->assertSame('return', $savedDoiConfig->getSkipPostAction());
     }
 
@@ -217,7 +219,7 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $this->assertEquals($verificationEmail->getId(), $verificationEmailField->attr('value'));
 
         $successUrlField = $crawler->filter('input[name="mauticform[doiConfig][successRedirectUrl]"]');
-        $this->assertEquals('https://example.com/existing-success', $successUrlField->attr('value'));
+        $this->assertSame('https://example.com/existing-success', $successUrlField->attr('value'));
     }
 
     /**
@@ -272,13 +274,13 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $updatedDoiConfig = $this->doiConfigManager->getFormDoiConfig($form);
 
         // Assert that the config was updated correctly
-        $this->assertNotNull($updatedDoiConfig);
+        $this->assertInstanceOf(FormDoiConfig::class, $updatedDoiConfig);
         $this->assertTrue($updatedDoiConfig->isEnabled());
         $this->assertFalse($updatedDoiConfig->isSkipOnCookie());
         $this->assertEquals($newVerificationEmail->getId(), $updatedDoiConfig->getVerificationEmail()->getId());
         $this->assertEquals($newFollowUpEmail->getId(), $updatedDoiConfig->getFollowUpEmail()->getId());
-        $this->assertEquals('https://example.com/updated-success', $updatedDoiConfig->getSuccessRedirectUrl());
-        $this->assertEquals('https://example.com/updated-error', $updatedDoiConfig->getErrorRedirectUrl());
+        $this->assertSame('https://example.com/updated-success', $updatedDoiConfig->getSuccessRedirectUrl());
+        $this->assertSame('https://example.com/updated-error', $updatedDoiConfig->getErrorRedirectUrl());
 
         // Assert that the config is the same entity as the initial one (updated, not new)
         $this->assertEquals($initialDoiConfig->getId(), $updatedDoiConfig->getId());
@@ -394,8 +396,9 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
 
         // Verify the action was updated
         $updatedAction = $doiActionRepository->find($doiAction->getId());
-        $this->assertEquals('Updated DOI Email Action', $updatedAction->getName());
-        $this->assertEquals('Updated action description', $updatedAction->getDescription());
+        $this->assertInstanceOf(FormDoiAction::class, $updatedAction);
+        $this->assertSame('Updated DOI Email Action', $updatedAction->getName());
+        $this->assertSame('Updated action description', $updatedAction->getDescription());
         $this->assertEquals('Updated email subject', $updatedAction->getProperties()['subject']);
         $this->assertEquals('Updated email message', $updatedAction->getProperties()['message']);
     }
@@ -557,9 +560,9 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $configRepository       = $this->em->getRepository(FormDoiConfig::class);
         $originalConfigReloaded = $configRepository->findOneBy(['form' => $originalForm]);
         $clonedConfig           = $configRepository->findOneBy(['form' => $clonedForm]);
-        $this->assertNotNull($originalConfigReloaded, 'Original form should retain its DOI config.');
+        $this->assertInstanceOf(FormDoiConfig::class, $originalConfigReloaded, 'Original form should retain its DOI config.');
         $this->assertSame($originalConfigId, $originalConfigReloaded->getId(), 'Original config should remain unchanged.');
-        $this->assertNotNull($clonedConfig, 'Cloned form should have DOI config.');
+        $this->assertInstanceOf(FormDoiConfig::class, $clonedConfig, 'Cloned form should have DOI config.');
         $this->assertNotSame($originalConfigId, $clonedConfig->getId(), 'Cloned config should be a new entity.');
         $this->assertTrue($clonedConfig->isEnabled());
         $this->assertTrue($clonedConfig->isSkipOnCookie());
@@ -604,6 +607,7 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $actionForm->setValues([
             'formaction[properties][subject]' => 'Test email subject',
             'formaction[properties][message]' => 'Test email message',
+            'formaction[properties][to]'      => 'doi-test@example.com',
             'formaction[name]'                => 'Test DOI Email Action',
             'formaction[description]'         => 'Test action description',
             'formaction[type]'                => 'form.email',
@@ -611,6 +615,10 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         ]);
         $this->client->submit($actionForm, [], $this->createAjaxHeaders());
         $this->assertResponseIsSuccessful();
+
+        $payload = json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($payload, 'DOI action submit must return JSON');
+        $this->assertSame(1, $payload['closeModal'] ?? null, 'Action form was not accepted');
     }
 
     private function submitEditDoiActionForm(string $sessionId, int $doiActionId): void
@@ -634,6 +642,7 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         $actionForm->setValues([
             'formaction[properties][subject]' => 'Updated email subject',
             'formaction[properties][message]' => 'Updated email message',
+            'formaction[properties][to]'      => 'doi-test@example.com',
             'formaction[name]'                => 'Updated DOI Email Action',
             'formaction[description]'         => 'Updated action description',
             'formaction[type]'                => 'form.email',
@@ -641,6 +650,10 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
         ]);
         $this->client->submit($actionForm, [], $this->createAjaxHeaders());
         $this->assertResponseIsSuccessful();
+
+        $payload = json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($payload, 'DOI action edit submit must return JSON');
+        $this->assertSame(1, $payload['closeModal'] ?? null, 'Action edit form was not accepted');
     }
 
     private function assertDoiActionNotInSession(string $sessionId): void
@@ -661,8 +674,10 @@ class FormDoiControllerFunctionalTest extends MauticMysqlTestCase
     private function getDoiActionsFromSession(string $sessionId): array
     {
         $sessionKey = 'mautic.form.'.$sessionId.'.actions.doi_verified';
+        $session    = $this->client->getSession();
+        $this->assertInstanceOf(\Symfony\Component\HttpFoundation\Session\SessionInterface::class, $session, 'KernelBrowser session must be available');
 
-        return $this->client->getRequest()->getSession()->get($sessionKey, []);
+        return $session->get($sessionKey, []);
     }
 
     private function createEmail(string $name): Email

@@ -8,12 +8,11 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
-class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
+final class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -39,17 +38,17 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:update-timeout');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 1 | Updated: 1', $output);
+        $this->assertStringContainsString('Processed: 1 | Updated: 1', $output);
 
         $this->em->refresh($expiredSubmission);
         $this->em->refresh($recentSubmission);
 
-        Assert::assertTrue($expiredSubmission->isTimedOut());
-        Assert::assertSame(FormDoiSubmission::STATUS_TIMEOUT, $expiredSubmission->getStatus());
-        Assert::assertNotNull($expiredSubmission->getDateTimeout());
-        Assert::assertTrue($recentSubmission->isPending());
-        Assert::assertSame(FormDoiSubmission::STATUS_PENDING, $recentSubmission->getStatus());
-        Assert::assertNull($recentSubmission->getDateTimeout());
+        $this->assertTrue($expiredSubmission->isTimedOut());
+        $this->assertSame(FormDoiSubmission::STATUS_TIMEOUT, $expiredSubmission->getStatus());
+        $this->assertInstanceOf(\DateTime::class, $expiredSubmission->getDateTimeout());
+        $this->assertTrue($recentSubmission->isPending());
+        $this->assertSame(FormDoiSubmission::STATUS_PENDING, $recentSubmission->getStatus());
+        $this->assertNotInstanceOf(\DateTime::class, $recentSubmission->getDateTimeout());
     }
 
     public function testCommandWithCustomLimit(): void
@@ -63,7 +62,7 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:update-timeout', ['--limit' => '2']);
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 2 | Updated: 2', $output);
+        $this->assertStringContainsString('Processed: 2 | Updated: 2', $output);
     }
 
     public function testCommandWithBatchSize(): void
@@ -81,7 +80,7 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:update-timeout', ['--batch' => '2']);
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 5 | Updated: 5', $output);
+        $this->assertStringContainsString('Processed: 5 | Updated: 5', $output);
     }
 
     public function testCommandRespectsConfiguredTimeout(): void
@@ -98,15 +97,15 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:update-timeout');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 1 | Updated: 1', $output);
+        $this->assertStringContainsString('Processed: 1 | Updated: 1', $output);
 
         $this->em->refresh($expiredSubmission);
         $this->em->refresh($notExpiredSubmission);
 
         // The 13-hour-old submission should have been timed out
-        Assert::assertTrue($expiredSubmission->isTimedOut());
+        $this->assertTrue($expiredSubmission->isTimedOut());
         // The 11-hour-old submission should still be pending
-        Assert::assertTrue($notExpiredSubmission->isPending());
+        $this->assertTrue($notExpiredSubmission->isPending());
     }
 
     public function testCommandSkipsAlreadyTimedOutSubmissions(): void
@@ -126,13 +125,13 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
 
         $output = $commandTester->getDisplay();
         // Should only process the pending one, not the already timed out one
-        Assert::assertStringContainsString('Processed: 1 | Updated: 1', $output);
+        $this->assertStringContainsString('Processed: 1 | Updated: 1', $output);
 
         $this->em->refresh($alreadyTimedOut);
         $this->em->refresh($pendingExpired);
 
-        Assert::assertTrue($alreadyTimedOut->isTimedOut());
-        Assert::assertTrue($pendingExpired->isTimedOut());
+        $this->assertTrue($alreadyTimedOut->isTimedOut());
+        $this->assertTrue($pendingExpired->isTimedOut());
     }
 
     public function testCommandDisplaysMessageWhenPluginDisabled(): void
@@ -142,8 +141,8 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:update-timeout');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('DOI plugin is disabled', $output);
-        Assert::assertSame(1, $commandTester->getStatusCode());
+        $this->assertStringContainsString('DOI plugin is disabled', $output);
+        $this->assertSame(1, $commandTester->getStatusCode());
     }
 
     public function testVerboseOutputShowsSubmissionIds(): void
@@ -154,16 +153,16 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $expired2 = $this->formFixtureHelper->createDoiSubmission($form, 'expired2@example.com', new \DateTime('-50 hours'));
         $recent   = $this->formFixtureHelper->createDoiSubmission($form, 'recent@example.com', new \DateTime('-1 hour'));
 
-        $kernel        = static::getContainer()->get('kernel');
+        $kernel        = self::getContainer()->get('kernel');
         $application   = new Application($kernel);
         $command       = $application->find('leuchtfeuer:doi:update-timeout');
         $commandTester = new CommandTester($command);
         $commandTester->execute([], ['verbosity' => OutputInterface::VERBOSITY_VERBOSE]);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Processed: 2 | Updated: 2', $output);
-        Assert::assertStringContainsString('Processed submission IDs:', $output);
-        Assert::assertStringContainsString('Updated submission IDs:', $output);
+        $this->assertStringContainsString('Processed: 2 | Updated: 2', $output);
+        $this->assertStringContainsString('Processed submission IDs:', $output);
+        $this->assertStringContainsString('Updated submission IDs:', $output);
 
         $this->em->refresh($expired1);
         $this->em->refresh($expired2);
@@ -173,16 +172,16 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $id2 = $expired2->getId();
         $id3 = $recent->getId();
 
-        Assert::assertNotNull($id1);
-        Assert::assertNotNull($id2);
+        $this->assertNotNull($id1);
+        $this->assertNotNull($id2);
 
         // Both expired IDs must be present in the output
-        Assert::assertStringContainsString((string) $id1, $output);
-        Assert::assertStringContainsString((string) $id2, $output);
+        $this->assertStringContainsString((string) $id1, $output);
+        $this->assertStringContainsString((string) $id2, $output);
 
         // The recent (not processed) ID should not appear in verbose output
         if (null !== $id3) {
-            Assert::assertStringNotContainsString((string) $id3, $output);
+            $this->assertStringNotContainsString((string) $id3, $output);
         }
     }
 
@@ -193,7 +192,7 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $expired1 = $this->formFixtureHelper->createDoiSubmission($form, 'expired1@example.com', new \DateTime('-49 hours'));
         $expired2 = $this->formFixtureHelper->createDoiSubmission($form, 'expired2@example.com', new \DateTime('-50 hours'));
 
-        $kernel        = static::getContainer()->get('kernel');
+        $kernel        = self::getContainer()->get('kernel');
         $application   = new Application($kernel);
         $command       = $application->find('leuchtfeuer:doi:update-timeout');
         $commandTester = new CommandTester($command);
@@ -206,14 +205,14 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $id1 = $expired1->getId();
         $id2 = $expired2->getId();
 
-        Assert::assertNotNull($id1);
-        Assert::assertNotNull($id2);
+        $this->assertNotNull($id1);
+        $this->assertNotNull($id2);
 
-        Assert::assertStringContainsString(sprintf('Marked submission ID %s as timed out', (string) $id1), $output);
-        Assert::assertStringContainsString(sprintf('Marked submission ID %s as timed out', (string) $id2), $output);
+        $this->assertStringContainsString(sprintf('Marked submission ID %s as timed out', (string) $id1), $output);
+        $this->assertStringContainsString(sprintf('Marked submission ID %s as timed out', (string) $id2), $output);
 
         // Summary should still be present
-        Assert::assertStringContainsString('Processed: 2 | Updated: 2', $output);
+        $this->assertStringContainsString('Processed: 2 | Updated: 2', $output);
     }
 
     public function testCommandWithNoPendingExpiredSubmissions(): void
@@ -221,7 +220,7 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:update-timeout');
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 0 | Updated: 0', $output);
+        $this->assertStringContainsString('Processed: 0 | Updated: 0', $output);
     }
 
     public function testCommandWithBatchSizeAndLimit(): void
@@ -244,6 +243,6 @@ class UpdateTimeoutCommandFunctionalTest extends MauticMysqlTestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        Assert::assertStringContainsString('Processed: 5 | Updated: 5', $output);
+        $this->assertStringContainsString('Processed: 5 | Updated: 5', $output);
     }
 }

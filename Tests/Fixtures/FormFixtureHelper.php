@@ -19,7 +19,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Request;
 
-final class FormFixtureHelper
+final readonly class FormFixtureHelper
 {
     public function __construct(
         private EntityManagerInterface $em,

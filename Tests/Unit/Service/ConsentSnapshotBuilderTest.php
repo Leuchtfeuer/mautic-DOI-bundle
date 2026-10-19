@@ -22,7 +22,7 @@ final class ConsentSnapshotBuilderTest extends TestCase
 
         $snapshot = $this->createBuilder()->build($form, ['consent' => ['yes']], new Request());
 
-        self::assertSame([
+        $this->assertSame([
             'version' => 1,
             'fields'  => [[
                 'alias'            => 'consent',
@@ -41,8 +41,8 @@ final class ConsentSnapshotBuilderTest extends TestCase
 
         $snapshot = $this->createBuilder()->build($form, ['consent' => 'unknown'], new Request());
 
-        self::assertSame('unknown', $snapshot['fields'][0]['selected_options'][0]['value']);
-        self::assertNull($snapshot['fields'][0]['selected_options'][0]['label']);
+        $this->assertSame('unknown', $snapshot['fields'][0]['selected_options'][0]['value']);
+        $this->assertNull($snapshot['fields'][0]['selected_options'][0]['label']);
     }
 
     public function testBuildIgnoresInvalidValuesAndPreservesZero(): void
@@ -53,7 +53,7 @@ final class ConsentSnapshotBuilderTest extends TestCase
             'consent' => ['', null, [], '0', 'yes', 'yes'],
         ], new Request());
 
-        self::assertSame([
+        $this->assertSame([
             ['value' => '0', 'label' => 'consent.zero.token'],
             ['value' => 'yes', 'label' => 'consent.yes.token'],
         ], $snapshot['fields'][0]['selected_options']);
@@ -64,7 +64,7 @@ final class ConsentSnapshotBuilderTest extends TestCase
         $form       = $this->createFormWithCheckbox();
         $snapshot   = $this->createBuilder()->build($form, ['email' => 'contact@example.com'], new Request());
 
-        self::assertSame([
+        $this->assertSame([
             'version' => 1,
             'fields'  => [],
         ], $snapshot);
@@ -75,11 +75,11 @@ final class ConsentSnapshotBuilderTest extends TestCase
         $form       = $this->createFormWithCheckbox();
         $request    = new Request();
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects(self::once())
+        $dispatcher->expects($this->once())
             ->method('dispatch')
             ->with(self::callback(function (ResolveConsentSnapshotEvent $event) use ($form, $request): bool {
-                self::assertSame($form, $event->getForm());
-                self::assertSame($request, $event->getRequest());
+                $this->assertSame($form, $event->getForm());
+                $this->assertSame($request, $event->getRequest());
                 $event->transformLabels(static fn (string $label): string => 'resolved '.$label);
 
                 return true;
@@ -89,11 +89,11 @@ final class ConsentSnapshotBuilderTest extends TestCase
         $snapshot = (new ConsentSnapshotBuilder($dispatcher, $this->createStub(LoggerInterface::class)))
             ->build($form, ['consent' => ['yes']], $request);
 
-        self::assertSame(1, $snapshot['version']);
-        self::assertSame('consent', $snapshot['fields'][0]['alias']);
-        self::assertSame('resolved consent.group.token', $snapshot['fields'][0]['label']);
-        self::assertSame('yes', $snapshot['fields'][0]['selected_options'][0]['value']);
-        self::assertSame('resolved consent.yes.token', $snapshot['fields'][0]['selected_options'][0]['label']);
+        $this->assertSame(1, $snapshot['version']);
+        $this->assertSame('consent', $snapshot['fields'][0]['alias']);
+        $this->assertSame('resolved consent.group.token', $snapshot['fields'][0]['label']);
+        $this->assertSame('yes', $snapshot['fields'][0]['selected_options'][0]['value']);
+        $this->assertSame('resolved consent.yes.token', $snapshot['fields'][0]['selected_options'][0]['label']);
     }
 
     public function testBuildReturnsEntireSourceSnapshotWhenResolverFails(): void
@@ -107,7 +107,7 @@ final class ConsentSnapshotBuilderTest extends TestCase
                 throw new \RuntimeException('Resolution failed');
             });
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects(self::once())
+        $logger->expects($this->once())
             ->method('warning')
             ->with('DOI consent snapshot label resolution failed', self::callback(
                 static fn (array $context): bool => $context['exception'] instanceof \RuntimeException
@@ -116,8 +116,8 @@ final class ConsentSnapshotBuilderTest extends TestCase
         $snapshot = (new ConsentSnapshotBuilder($dispatcher, $logger))
             ->build($form, ['consent' => ['yes']], new Request());
 
-        self::assertSame('consent.group.token', $snapshot['fields'][0]['label']);
-        self::assertSame('consent.yes.token', $snapshot['fields'][0]['selected_options'][0]['label']);
+        $this->assertSame('consent.group.token', $snapshot['fields'][0]['label']);
+        $this->assertSame('consent.yes.token', $snapshot['fields'][0]['selected_options'][0]['label']);
     }
 
     private function createBuilder(): ConsentSnapshotBuilder

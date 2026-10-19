@@ -12,7 +12,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-final class ConsentSnapshotBuilder
+final readonly class ConsentSnapshotBuilder
 {
     public function __construct(
         private EventDispatcherInterface $eventDispatcher,

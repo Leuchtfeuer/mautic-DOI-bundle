@@ -13,9 +13,9 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiActionRepository;
 class FormDoiActionManager
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private FormDoiActionRepository $formDoiActionRepository,
-        private FormDoiActionConditionRepository $formDoiActionConditionRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly FormDoiActionRepository $formDoiActionRepository,
+        private readonly FormDoiActionConditionRepository $formDoiActionConditionRepository,
     ) {
     }
 

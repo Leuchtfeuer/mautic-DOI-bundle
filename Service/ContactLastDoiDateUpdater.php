@@ -9,7 +9,7 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Enum\LastDoiDateField;
 use Psr\Log\LoggerInterface;
 
-final class ContactLastDoiDateUpdater
+final readonly class ContactLastDoiDateUpdater
 {
     public function __construct(
         private LeadModel $leadModel,

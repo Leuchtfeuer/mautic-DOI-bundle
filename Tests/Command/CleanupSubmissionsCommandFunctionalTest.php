@@ -14,12 +14,11 @@ use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiConfig;
 use MauticPlugin\LeuchtfeuerDoiBundle\Entity\FormDoiSubmission;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\FormFixtureHelper;
 use MauticPlugin\LeuchtfeuerDoiBundle\Tests\Fixtures\PluginFixtureHelper;
-use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
-class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
+final class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
 {
     protected $useCleanupRollback = false;
 
@@ -61,16 +60,16 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submission', $output);
+        $this->assertStringContainsString('Deleted: 1 submission', $output);
 
         // Verify DOI submission is deleted
         $this->em->clear();
         $deletedDoiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNull($deletedDoiSubmission, 'DOI submission should be deleted');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedDoiSubmission, 'DOI submission should be deleted');
 
         // Verify core submission is deleted
         $deletedCoreSubmission = $this->em->getRepository(Submission::class)->find($coreSubmissionId);
-        Assert::assertNull($deletedCoreSubmission, 'Core submission should be deleted');
+        $this->assertNotInstanceOf(Submission::class, $deletedCoreSubmission, 'Core submission should be deleted');
     }
 
     public function testPendingSubmissionIsNotDeleted(): void
@@ -89,13 +88,13 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 0 submission', $output);
+        $this->assertStringContainsString('Deleted: 0 submission', $output);
 
         // Verify pending submission still exists (only timed-out submissions are cleaned up)
         $this->em->clear();
         $existingSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNotNull($existingSubmission, 'Pending submission should not be deleted');
-        Assert::assertTrue($existingSubmission->isPending(), 'Submission should remain pending');
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingSubmission, 'Pending submission should not be deleted');
+        $this->assertTrue($existingSubmission->isPending(), 'Submission should remain pending');
     }
 
     public function testConfirmedSubmissionIsNotDeleted(): void
@@ -117,13 +116,13 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 0 submission', $output);
+        $this->assertStringContainsString('Deleted: 0 submission', $output);
 
         // Verify confirmed submission still exists
         $this->em->clear();
         $existingSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNotNull($existingSubmission, 'Confirmed submission should not be deleted');
-        Assert::assertTrue($existingSubmission->isConfirmed(), 'Submission should remain confirmed');
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingSubmission, 'Confirmed submission should not be deleted');
+        $this->assertTrue($existingSubmission->isConfirmed(), 'Submission should remain confirmed');
     }
 
     // =========================================================================
@@ -152,13 +151,13 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('No forms have cleanup enabled', $output);
+        $this->assertStringContainsString('No forms have cleanup enabled', $output);
 
         // Verify submission still exists
         $this->em->clear();
         $existingSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNotNull($existingSubmission, 'Submission should remain when cleanup is not enabled');
-        Assert::assertSame(FormDoiSubmission::STATUS_TIMEOUT, $existingSubmission->getStatus());
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingSubmission, 'Submission should remain when cleanup is not enabled');
+        $this->assertSame(FormDoiSubmission::STATUS_TIMEOUT, $existingSubmission->getStatus());
     }
 
     /**
@@ -183,16 +182,16 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submission', $output);
+        $this->assertStringContainsString('Deleted: 1 submission', $output);
 
         // Verify submission is deleted
         $this->em->clear();
         $deletedSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNull($deletedSubmission, 'DOI submission should be deleted');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedSubmission, 'DOI submission should be deleted');
 
         // Verify NEW contact is also deleted
         $deletedContact = $this->em->getRepository(Lead::class)->find($contactId);
-        Assert::assertNull($deletedContact?->getId(), 'New contact should be deleted with the submission');
+        $this->assertNull($deletedContact?->getId(), 'New contact should be deleted with the submission');
     }
 
     /**
@@ -212,6 +211,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
             new \DateTime('-1 day')    // Timed out 1 day ago
         );
         $contact   = $timedOutSubmission->getLead();
+        $this->assertInstanceOf(Lead::class, $contact);
         $contactId = $contact->getId();
 
         // Simulate activity after the submission (e.g. visited a page 10 days ago)
@@ -224,17 +224,17 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submission', $output);
+        $this->assertStringContainsString('Deleted: 1 submission', $output);
 
         // Verify submission is deleted
         $this->em->clear();
         $deletedSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNull($deletedSubmission, 'DOI submission should be deleted');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedSubmission, 'DOI submission should be deleted');
 
         // Verify contact is NOT deleted because it had activity after submission
         $existingContact = $this->em->getRepository(Lead::class)->find($contactId);
-        Assert::assertNotNull($existingContact, 'Contact with activity after submission should NOT be deleted');
-        Assert::assertSame('activecontact@example.com', $existingContact->getEmail());
+        $this->assertInstanceOf(Lead::class, $existingContact, 'Contact with activity after submission should NOT be deleted');
+        $this->assertSame('activecontact@example.com', $existingContact->getEmail());
     }
 
     /**
@@ -266,17 +266,17 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submission', $output);
+        $this->assertStringContainsString('Deleted: 1 submission', $output);
 
         // Verify submission is deleted
         $this->em->clear();
         $deletedSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNull($deletedSubmission, 'DOI submission should be deleted');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedSubmission, 'DOI submission should be deleted');
 
         // Verify KNOWN contact still exists
         $existingContactReloaded = $this->em->getRepository(Lead::class)->find($contactId);
-        Assert::assertNotNull($existingContactReloaded, 'Previously known contact should NOT be deleted');
-        Assert::assertSame('knowncontact@example.com', $existingContactReloaded->getEmail());
+        $this->assertInstanceOf(Lead::class, $existingContactReloaded, 'Previously known contact should NOT be deleted');
+        $this->assertSame('knowncontact@example.com', $existingContactReloaded->getEmail());
     }
 
     /**
@@ -326,22 +326,22 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $output        = $commandTester->getDisplay();
 
         // Only the timed-out submission should be deleted
-        Assert::assertStringContainsString('Submissions deleted: 1', $output);
+        $this->assertStringContainsString('Submissions deleted: 1', $output);
 
         // Verify timed-out submission is deleted
         $this->em->clear();
         $deletedSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($timedOutSubmissionId);
-        Assert::assertNull($deletedSubmission, 'Timed-out DOI submission should be deleted');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedSubmission, 'Timed-out DOI submission should be deleted');
 
         // Verify other submission still exists
         $existingSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($otherSubmissionId);
-        Assert::assertNotNull($existingSubmission, ucfirst($otherStatus).' submission should still exist');
-        Assert::assertSame($otherStatus, $existingSubmission->getStatus());
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingSubmission, ucfirst($otherStatus).' submission should still exist');
+        $this->assertSame($otherStatus, $existingSubmission->getStatus());
 
         // Verify contact is NOT deleted (has other active submission)
         $existingContact = $this->em->getRepository(Lead::class)->find($contactId);
-        Assert::assertNotNull($existingContact, "Contact with {$otherStatus} submission should NOT be deleted");
-        Assert::assertSame('multisubmit@example.com', $existingContact->getEmail());
+        $this->assertInstanceOf(Lead::class, $existingContact, "Contact with {$otherStatus} submission should NOT be deleted");
+        $this->assertSame('multisubmit@example.com', $existingContact->getEmail());
     }
 
     /**
@@ -373,12 +373,12 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
             'form'   => $form->getId(),
             'status' => FormDoiSubmission::STATUS_TIMEOUT,
         ]);
-        Assert::assertSame(3, $allTimedOutCount, 'Should have 3 timed-out submissions before cleanup');
+        $this->assertSame(3, $allTimedOutCount, 'Should have 3 timed-out submissions before cleanup');
 
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions', ['--limit' => '2']);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Submissions deleted: 2', $output);
+        $this->assertStringContainsString('Submissions deleted: 2', $output);
 
         // Verify only 1 submission remains
         $this->em->clear();
@@ -386,7 +386,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
             'form'   => $form->getId(),
             'status' => FormDoiSubmission::STATUS_TIMEOUT,
         ]);
-        Assert::assertSame(1, $remainingCount, 'Should have 1 timed-out submission after cleanup with limit 2');
+        $this->assertSame(1, $remainingCount, 'Should have 1 timed-out submission after cleanup with limit 2');
     }
 
     public function testBatchOption(): void
@@ -407,7 +407,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions', ['--batch' => '2']);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 5 submission', $output);
+        $this->assertStringContainsString('Deleted: 5 submission', $output);
     }
 
     public function testFormIdFilterOption(): void
@@ -428,15 +428,15 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions', ['--form-id' => $form1->getId()]);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submissions', $output);
+        $this->assertStringContainsString('Deleted: 1 submissions', $output);
 
         // Verify only form1 submission is deleted
         $this->em->clear();
         $deletedSubmission1  = $this->em->getRepository(FormDoiSubmission::class)->find($submission1Id);
         $existingSubmission2 = $this->em->getRepository(FormDoiSubmission::class)->find($submission2Id);
 
-        Assert::assertNull($deletedSubmission1, 'Form1 submission should be deleted');
-        Assert::assertNotNull($existingSubmission2, 'Form2 submission should remain');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedSubmission1, 'Form1 submission should be deleted');
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingSubmission2, 'Form2 submission should remain');
     }
 
     public function testInvalidFormIdOption(): void
@@ -447,7 +447,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions', ['--form-id' => '99999']);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('does not have DOI cleanup enabled', $output);
+        $this->assertStringContainsString('does not have DOI cleanup enabled', $output);
     }
 
     public function testCommandFailsWhenPluginDisabled(): void
@@ -457,7 +457,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('DOI plugin is disabled', $output);
+        $this->assertStringContainsString('DOI plugin is disabled', $output);
     }
 
     // =========================================================================
@@ -475,15 +475,15 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $id1 = $submission1->getId();
         $id2 = $submission2->getId();
 
-        $kernel        = static::getContainer()->get('kernel');
+        $kernel        = self::getContainer()->get('kernel');
         $application   = new Application($kernel);
         $command       = $application->find('leuchtfeuer:doi:cleanup-submissions');
         $commandTester = new CommandTester($command);
         $commandTester->execute([], ['verbosity' => OutputInterface::VERBOSITY_VERBOSE]);
         $output = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString((string) $id1, $output);
-        Assert::assertStringContainsString((string) $id2, $output);
+        $this->assertStringContainsString((string) $id1, $output);
+        $this->assertStringContainsString((string) $id2, $output);
     }
 
     public function testVeryVerboseOutputShowsPerSubmissionDetails(): void
@@ -494,15 +494,15 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $submission   = $this->createTimedOutDoiSubmission($form, 'veryverbose@example.com', new \DateTime('-30 days'), new \DateTime('-1 day'));
         $submissionId = $submission->getId();
 
-        $kernel        = static::getContainer()->get('kernel');
+        $kernel        = self::getContainer()->get('kernel');
         $application   = new Application($kernel);
         $command       = $application->find('leuchtfeuer:doi:cleanup-submissions');
         $commandTester = new CommandTester($command);
         $commandTester->execute([], ['verbosity' => OutputInterface::VERBOSITY_VERY_VERBOSE]);
         $output = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted DOI submission ID', $output);
-        Assert::assertStringContainsString((string) $submissionId, $output);
+        $this->assertStringContainsString('Deleted DOI submission ID', $output);
+        $this->assertStringContainsString((string) $submissionId, $output);
     }
 
     // =========================================================================
@@ -527,15 +527,15 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submissions', $output);
+        $this->assertStringContainsString('Deleted: 1 submissions', $output);
 
         // Verify only the form with cleanup enabled has its submission deleted
         $this->em->clear();
         $deletedCleanup    = $this->em->getRepository(FormDoiSubmission::class)->find($idCleanup);
         $existingNoCleanup = $this->em->getRepository(FormDoiSubmission::class)->find($idNoCleanup);
 
-        Assert::assertNull($deletedCleanup, 'Form with cleanup enabled should have submission deleted');
-        Assert::assertNotNull($existingNoCleanup, 'Form without cleanup should retain submission');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedCleanup, 'Form with cleanup enabled should have submission deleted');
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingNoCleanup, 'Form without cleanup should retain submission');
     }
 
     public function testSkippedSubmissionsAreNotDeleted(): void
@@ -557,13 +557,13 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 0 submission', $output);
+        $this->assertStringContainsString('Deleted: 0 submission', $output);
 
         // Verify skipped submission still exists
         $this->em->clear();
         $existingSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNotNull($existingSubmission, 'Skipped submission should not be deleted');
-        Assert::assertSame(FormDoiSubmission::STATUS_SKIPPED, $existingSubmission->getStatus());
+        $this->assertInstanceOf(FormDoiSubmission::class, $existingSubmission, 'Skipped submission should not be deleted');
+        $this->assertSame(FormDoiSubmission::STATUS_SKIPPED, $existingSubmission->getStatus());
     }
 
     public function testUploadedFileIsDeletedWithSubmission(): void
@@ -579,14 +579,14 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
                 break;
             }
         }
-        Assert::assertNotNull($fileField, 'Form should have a file field');
+        $this->assertInstanceOf(Field::class, $fileField, 'Form should have a file field');
 
         // Create an uploaded file for the submission
         $uploadedFileName = 'test-upload-'.uniqid().'.txt';
         $uploadedFilePath = $this->createUploadedFileForField($fileField, $uploadedFileName);
 
         // Verify the file exists before cleanup
-        Assert::assertFileExists($uploadedFilePath, 'Uploaded file should exist before cleanup');
+        $this->assertFileExists($uploadedFilePath, 'Uploaded file should exist before cleanup');
 
         // Create a timed-out submission with the file reference in results
         $timedOutSubmission = $this->createTimedOutDoiSubmissionWithFile(
@@ -603,19 +603,19 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions');
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Deleted: 1 submission', $output);
+        $this->assertStringContainsString('Deleted: 1 submission', $output);
 
         // Verify DOI submission is deleted
         $this->em->clear();
         $deletedDoiSubmission = $this->em->getRepository(FormDoiSubmission::class)->find($doiSubmissionId);
-        Assert::assertNull($deletedDoiSubmission, 'DOI submission should be deleted');
+        $this->assertNotInstanceOf(FormDoiSubmission::class, $deletedDoiSubmission, 'DOI submission should be deleted');
 
         // Verify core submission is deleted
         $deletedCoreSubmission = $this->em->getRepository(Submission::class)->find($coreSubmissionId);
-        Assert::assertNull($deletedCoreSubmission, 'Core submission should be deleted');
+        $this->assertNotInstanceOf(Submission::class, $deletedCoreSubmission, 'Core submission should be deleted');
 
         // Verify the uploaded file is deleted
-        Assert::assertFileDoesNotExist($uploadedFilePath, 'Uploaded file should be deleted with the submission');
+        $this->assertFileDoesNotExist($uploadedFilePath, 'Uploaded file should be deleted with the submission');
     }
 
     // =========================================================================
@@ -627,7 +627,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions', ['--batch' => '0']);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Batch size must be a positive integer', $output);
+        $this->assertStringContainsString('Batch size must be a positive integer', $output);
     }
 
     public function testInvalidLimitReturnsError(): void
@@ -635,7 +635,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
         $commandTester = $this->testSymfonyCommand('leuchtfeuer:doi:cleanup-submissions', ['--limit' => '-1']);
         $output        = $commandTester->getDisplay();
 
-        Assert::assertStringContainsString('Limit must be a positive integer', $output);
+        $this->assertStringContainsString('Limit must be a positive integer', $output);
     }
 
     // =========================================================================
@@ -838,7 +838,7 @@ class CleanupSubmissionsCommandFunctionalTest extends MauticMysqlTestCase
     private function createUploadedFileForField(Field $field, string $fileName): string
     {
         /** @var CoreParametersHelper $coreParametersHelper */
-        $coreParametersHelper = static::getContainer()->get(CoreParametersHelper::class);
+        $coreParametersHelper = self::getContainer()->get(CoreParametersHelper::class);
         $uploadDir            = $coreParametersHelper->get('form_upload_dir');
         $formId               = $field->getForm()->getId();
         $fieldId              = $field->getId();

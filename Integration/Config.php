@@ -15,7 +15,7 @@ class Config
     public const DEFAULT_DOI_LINK_TIMEOUT   = 48;
 
     public function __construct(
-        private IntegrationsHelper $integrationsHelper,
+        private readonly IntegrationsHelper $integrationsHelper,
     ) {
     }
 
